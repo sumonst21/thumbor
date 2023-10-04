@@ -8,7 +8,7 @@
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2011 globo.com thumbor@googlegroups.com
 
-import optparse
+import optparse  # pylint: disable=deprecated-module
 import sys
 from urllib.parse import quote
 
@@ -161,9 +161,6 @@ def get_options(arguments):
     (parsed_options, arguments) = parser.parse_args(arguments)
 
     if not arguments:
-        sys.stdout.write(
-            "Error: The image argument is mandatory. For more information type thumbor-url -h\n"
-        )
         return None, None
 
     return parsed_options, arguments
@@ -171,7 +168,7 @@ def get_options(arguments):
 
 def get_thumbor_params(image_url, params, config):
     if params.key_file:
-        with open(params.key_file) as key_file:
+        with open(params.key_file, "rb") as key_file:
             security_key = key_file.read().strip()
     else:
         security_key = config.SECURITY_KEY if not params.key else params.key
@@ -221,6 +218,12 @@ def main(arguments=None):
 
     parsed_options, arguments = get_options(arguments)
 
+    if not arguments:
+        sys.stdout.write(
+            "Error: The image argument is mandatory. For more information type thumbor-url -h\n"
+        )
+        sys.exit(1)
+
     image_url = arguments[0]
     image_url = quote(image_url)
 
@@ -234,16 +237,16 @@ def main(arguments=None):
             "Error: The -k or --key argument is mandatory."
             " For more information type thumbor-url -h\n"
         )
-        return None
+        sys.exit(1)
 
-    security_key, thumbor_params = get_thumbor_params(image_url, parsed_options, config)
+    security_key, thumbor_params = get_thumbor_params(
+        image_url, parsed_options, config
+    )
 
     crypto = CryptoURL(key=security_key)
     url = crypto.generate(**thumbor_params)
     sys.stdout.write("URL:\n")
-    sys.stdout.write("%s\n" % url)
-
-    return url
+    sys.stdout.write(f"{url}\n")
 
 
 if __name__ == "__main__":

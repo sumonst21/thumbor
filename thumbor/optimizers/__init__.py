@@ -26,8 +26,12 @@ class BaseOptimizer:
         if not self.should_run(image_extension, buffer):
             return buffer
 
-        ifile = NamedTemporaryFile(delete=False)
-        ofile = NamedTemporaryFile(delete=False)
+        ifile = NamedTemporaryFile(  # pylint: disable=consider-using-with
+            delete=False
+        )
+        ofile = NamedTemporaryFile(  # pylint: disable=consider-using-with
+            delete=False
+        )
         try:
             ifile.write(buffer)
             ifile.close()
@@ -39,7 +43,6 @@ class BaseOptimizer:
                 ofile.name, "rb"
             ) as output_file:  # reopen with file thats been changed with the optimizer
                 return output_file.read()
-
         finally:
             os.unlink(ifile.name)
             os.unlink(ofile.name)

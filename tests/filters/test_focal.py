@@ -22,7 +22,9 @@ class FocalFilterTestCase(FilterTestCase):
             "source.jpg", "thumbor.filters.focal", "focal(146x156:279x208)"
         )
 
-        expect(self.context.request.focal_points[0].origin).to_equal("Explicit")
+        expect(self.context.request.focal_points[0].origin).to_equal(
+            "Explicit"
+        )
         expect(self.context.request.focal_points[0].height).to_equal(52)
         expect(self.context.request.focal_points[0].width).to_equal(133)
         expect(self.context.request.focal_points[0].y).to_equal(182)
@@ -31,7 +33,9 @@ class FocalFilterTestCase(FilterTestCase):
     @gen_test
     async def test_focal_filter_no_change(self):
         image = await self.get_filtered(
-            "source.jpg", "thumbor.filters.focal", "focal(0x0:400x600)",
+            "source.jpg",
+            "thumbor.filters.focal",
+            "focal(0x0:400x600)",
         )
         expected = self.get_fixture("source.jpg")
 

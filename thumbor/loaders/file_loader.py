@@ -10,14 +10,16 @@
 
 from datetime import datetime
 from os import fstat
-from os.path import abspath, exists, join
+from os.path import abspath, exists, isfile, join
 from urllib.parse import unquote
 
 from thumbor.loaders import LoaderResult
 
 
 async def load(context, path):
-    file_path = join(context.config.FILE_LOADER_ROOT_PATH.rstrip("/"), path.lstrip("/"))
+    file_path = join(
+        context.config.FILE_LOADER_ROOT_PATH.rstrip("/"), path.lstrip("/")
+    )
     file_path = abspath(file_path)
     inside_root_path = file_path.startswith(
         abspath(context.config.FILE_LOADER_ROOT_PATH)
@@ -35,7 +37,7 @@ async def load(context, path):
     if not exists(file_path):
         file_path = unquote(file_path)
 
-    if exists(file_path):
+    if exists(file_path) and isfile(file_path):
         with open(file_path, "rb") as source_file:
             stats = fstat(source_file.fileno())
 

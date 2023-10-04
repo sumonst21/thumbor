@@ -8,7 +8,7 @@
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2011 globo.com thumbor@googlegroups.com
 
-# pylint: disable=too-many-lines
+# pylint: disable=too-many-lines,consider-using-f-string
 
 from thumbor.config import Config
 from thumbor.context import Context, RequestParameters
@@ -76,7 +76,7 @@ class MockSyncDetector(BaseDetector):
 
 class MockErrorSyncDetector(BaseDetector):
     async def detect(self):
-        raise Exception("x")
+        raise IOError("some-io-error")
 
 
 # Test Data - pylint: disable=too-many-locals,too-many-instance-attributes
@@ -100,7 +100,6 @@ class TestData:
         meta=False,
         stretch=False,
     ):
-
         self.source_width = source_width
         self.source_height = source_height
         self.target_width = target_width
@@ -226,12 +225,16 @@ class TestData:
             and self.target_height == self.source_height
         )
         orig_height = (
-            self.target_width == self.source_width and self.target_height == "orig"
+            self.target_width == self.source_width
+            and self.target_height == "orig"
         )
         orig_width = (
-            self.target_width == "orig" and self.target_height == self.source_height
+            self.target_width == "orig"
+            and self.target_height == self.source_height
         )
-        orig_both = self.target_width == "orig" and self.target_height == "orig"
+        orig_both = (
+            self.target_width == "orig" and self.target_height == "orig"
+        )
 
         if same_as_source or orig_height or orig_width or orig_both:
             return True
@@ -241,7 +244,9 @@ class TestData:
         if not self.target_width:
             ensure(
                 self.engine.calls["resize"][0]["width"]
-                == float(self.source_width) * self.target_height / self.source_height,
+                == float(self.source_width)
+                * self.target_height
+                / self.source_height,
                 lambda: self.resize_error_message,
             )
             ensure(
@@ -257,14 +262,20 @@ class TestData:
             )
             ensure(
                 self.engine.calls["resize"][0]["height"]
-                == float(self.source_height) * self.target_width / self.source_width,
+                == float(self.source_height)
+                * self.target_width
+                / self.source_width,
                 lambda: self.resize_error_message,
             )
             return True
 
         ensure(
             self.engine.calls["resize"][0]["width"]
-            == (self.target_width == "orig" and self.source_width or self.target_width),
+            == (
+                self.target_width == "orig"
+                and self.source_width
+                or self.target_width
+            ),
             lambda: self.resize_error_message,
         )
         ensure(
@@ -280,11 +291,14 @@ class TestData:
 
     @property
     def crop_error_message(self):
-        message = "The engine crop should have been called with %dx%d %dx%d" % (
-            self.crop_left,
-            self.crop_top,
-            self.crop_right,
-            self.crop_bottom,
+        message = (
+            "The engine crop should have been called with %dx%d %dx%d"
+            % (
+                self.crop_left,
+                self.crop_top,
+                self.crop_right,
+                self.crop_bottom,
+            )
         )
         if not self.engine.calls["crop"]:
             return "%s, but was never called" % message

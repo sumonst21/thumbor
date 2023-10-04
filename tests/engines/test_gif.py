@@ -9,9 +9,9 @@
 # Copyright (c) 2011 globo.com thumbor@googlegroups.com
 
 from os.path import abspath, dirname, join
+from shutil import which
 
 from preggy import expect
-from shutil import which
 
 from tests.base import TestCase
 from thumbor.config import Config
@@ -22,7 +22,7 @@ from thumbor.importer import Importer
 STORAGE_PATH = abspath(join(dirname(__file__), "../fixtures/images/"))
 
 
-class GitEngineTestCase(TestCase):
+class GifEngineTestCase(TestCase):
     def get_config(self):
         return Config(
             SECURITY_KEY="ACME-SEC",
@@ -39,13 +39,15 @@ class GitEngineTestCase(TestCase):
         return Importer(self.config)
 
     def get_server(self):
-        server = ServerParameters(8889, "localhost", "thumbor.conf", None, "info", None)
+        server = ServerParameters(
+            8889, "localhost", "thumbor.conf", None, "info", None
+        )
         server.security_key = "ACME-SEC"
         server.gifsicle_path = which("gifsicle")
         return server
 
     def get_context(self):
-        context = super(GitEngineTestCase, self).get_context()
+        context = super().get_context()
         req = RequestParameters(url="/foo/bar.gif")
         context.request = req
         return context
@@ -63,7 +65,9 @@ class GitEngineTestCase(TestCase):
 
     def test_errors_on_gifsicle_should_not_raises_errors_when_output(self):
         engine = Engine(self.context)
-        with open(join(STORAGE_PATH, "SmallFullColourGIF.gif"), "rb") as image_file:
+        with open(
+            join(STORAGE_PATH, "SmallFullColourGIF.gif"), "rb"
+        ) as image_file:
             buffer = image_file.read()
 
         engine.load(buffer, ".gif")
@@ -80,7 +84,9 @@ class GitEngineTestCase(TestCase):
 
     def test_is_multiple_should_returns_false_if_gif_has_one_frame(self):
         engine = Engine(self.context)
-        with open(join(STORAGE_PATH, "animated-one-frame.gif"), "rb") as image_file:
+        with open(
+            join(STORAGE_PATH, "animated-one-frame.gif"), "rb"
+        ) as image_file:
             buffer = image_file.read()
 
         engine.load(buffer, ".gif")

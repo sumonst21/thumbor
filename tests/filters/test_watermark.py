@@ -17,7 +17,10 @@ from tests.fixtures.watermark_fixtures import (
     SOURCE_IMAGE_SIZES,
     WATERMARK_IMAGE_SIZES,
 )
+from thumbor.config import Config
+from thumbor.context import Context
 from thumbor.filters import watermark
+from thumbor.importer import Importer
 from thumbor.testing import FilterTestCase
 
 
@@ -91,7 +94,9 @@ class WatermarkFilterTestCase(FilterTestCase):
     @gen_test
     async def test_watermark_filter_detect_extension_simple(self):
         image = await self.get_filtered(
-            "source.jpg", "thumbor.filters.watermark", "watermark(watermark,30,-50,60)",
+            "source.jpg",
+            "thumbor.filters.watermark",
+            "watermark(watermark,30,-50,60)",
         )
         expected = self.get_fixture("watermarkSimple.jpg")
         ssim = self.get_ssim(image, expected)
@@ -246,7 +251,10 @@ class WatermarkFilterTestCase(FilterTestCase):
                         watermark_image_height,
                     ) = filter_instance.calc_watermark_size(
                         (source_image_width, source_image_height),
-                        (watermark_source_image_width, watermark_source_image_height,),
+                        (
+                            watermark_source_image_width,
+                            watermark_source_image_height,
+                        ),
                         w_ratio,
                         h_ratio,
                     )
@@ -266,9 +274,13 @@ class WatermarkFilterTestCase(FilterTestCase):
                     }
 
                     test["topic_name"] = "watermark_image_width"
-                    expect(watermark_image_width).to_fit_into(max_width, **test)
+                    expect(watermark_image_width).to_fit_into(
+                        max_width, **test
+                    )
                     test["topic_name"] = "watermark_image_height"
-                    expect(watermark_image_height).to_fit_into(max_height, **test)
+                    expect(watermark_image_height).to_fit_into(
+                        max_height, **test
+                    )
 
                     test["topic_name"] = "fill out"
                     expect(
@@ -280,3 +292,24 @@ class WatermarkFilterTestCase(FilterTestCase):
 
                     test["topic_name"] = "image ratio"
                     expect(watermark_image).to_almost_equal(ratio, 2, **test)
+
+    @gen_test
+    async def test_watermark_validate_allowed_source(self):
+        config = Config(
+            ALLOWED_SOURCES=[
+                "s.glbimg.com",
+            ],
+            LOADER="thumbor.loaders.http_loader",
+        )
+        importer = Importer(config)
+        importer.import_modules()
+
+        context = Context(config=config, importer=importer)
+        filter_instance = watermark.Filter("", context)
+
+        expect(
+            filter_instance.validate("https://s2.glbimg.com/logo.jpg")
+        ).to_be_false()
+        expect(
+            filter_instance.validate("https://s.glbimg.com/logo.jpg")
+        ).to_be_true()

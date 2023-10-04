@@ -100,9 +100,9 @@ class FiltersFactory:
             instance = cls.init_if_valid(param, context)
 
             if instance:
-                filter_instances[getattr(cls, "phase", PHASE_POST_TRANSFORM)].append(
-                    instance
-                )
+                filter_instances[
+                    getattr(cls, "phase", PHASE_POST_TRANSFORM)
+                ].append(instance)
 
         return FiltersRunner(filter_instances)
 
@@ -117,7 +117,7 @@ class FiltersRunner:
             return None
 
         while filters:
-            filter_to_run = filters.pop()
+            filter_to_run = filters.pop(0)
             await filter_to_run.run()
 
 
@@ -125,10 +125,10 @@ class BaseFilter:
     PositiveNumber = {"regex": r"[\d]+", "parse": int}
     PositiveNonZeroNumber = {"regex": r"[\d]*[1-9][\d]*", "parse": int}
     NegativeNumber = {
-        "regex": r"[-]%s" % PositiveNumber["regex"],
+        "regex": f"[-]{PositiveNumber['regex']}",
         "parse": int,
     }
-    Number = {"regex": r"[-]?%s" % PositiveNumber["regex"], "parse": int}
+    Number = {"regex": f"[-]?{PositiveNumber['regex']}", "parse": int}
     DecimalNumber = {
         "regex": r"[-]?(?:(?:[\d]+\.?[\d]*)|(?:[\d]*\.?[\d]+))",
         "parse": float,
@@ -144,7 +144,9 @@ class BaseFilter:
 
     @classmethod
     def pre_compile(cls):
-        meths = [f for f in list(cls.__dict__.values()) if hasattr(f, "filter_data")]
+        meths = [
+            f for f in list(cls.__dict__.values()) if hasattr(f, "filter_data")
+        ]
         if len(meths) == 0:
             return None
         cls.runnable_method = meths[0]
@@ -170,11 +172,11 @@ class BaseFilter:
                 optional = "?"
             if i > 0:
                 comma = ","
-            regexes.append(r"(?:%s\s*(%s)\s*)%s" % (comma, val[0], optional))
+            regexes.append(f"(?:{comma}\\s*({val[0]})\\s*){optional}")
             parsers.append(val[1])
 
         cls.parsers = parsers
-        cls.regex_str = r"%s\(%s\)" % (filter_data["name"], "".join(regexes))
+        cls.regex_str = f"{filter_data['name']}\\({''.join(regexes)}\\)"
         cls.regex = re.compile(cls.regex_str)
 
     @classmethod
@@ -194,7 +196,9 @@ class BaseFilter:
             ]
         self.params = params
         self.context = context
-        self.engine = context.modules.engine if context and context.modules else None
+        self.engine = (
+            context.modules.engine if context and context.modules else None
+        )
 
     async def run(self):
         if self.params is None:

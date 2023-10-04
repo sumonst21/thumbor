@@ -15,7 +15,7 @@ from thumbor.engines import BaseEngine
 
 class JSONEngine(BaseEngine):
     def __init__(self, engine, path, callback_name=None):
-        super(JSONEngine, self).__init__(engine.context)
+        super().__init__(engine.context)
         self.engine = engine
         self.extension = engine.extension
         self.path = path
@@ -33,7 +33,9 @@ class JSONEngine(BaseEngine):
         return self.engine.size
 
     def resize(self, width, height):
-        self.operations.append({"type": "resize", "width": width, "height": height})
+        self.operations.append(
+            {"type": "resize", "width": width, "height": height}
+        )
         self.engine.resize(width, height)
         self.refresh_image()
 
@@ -121,8 +123,14 @@ class JSONEngine(BaseEngine):
     def has_transparency(self):
         return self.engine.has_transparency()
 
+    def avif_enabled(self):
+        return self.engine.avif_enabled()
+
+    def heif_enabled(self):
+        return self.engine.heif_enabled()
+
     def can_auto_convert_png_to_jpg(self):
-        can_convert = super(JSONEngine, self).can_auto_convert_png_to_jpg()
+        can_convert = super().can_auto_convert_png_to_jpg()
         if can_convert:
             self.operations.append({"type": "auto_png_to_jpg_conversion"})
 
@@ -148,6 +156,6 @@ class JSONEngine(BaseEngine):
         thumbor_json = json.dumps(thumbor_json)
 
         if self.callback_name:
-            return "%s(%s);" % (self.callback_name, thumbor_json)
+            return f"{self.callback_name}({thumbor_json});"
 
         return thumbor_json

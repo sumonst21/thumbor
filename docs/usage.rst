@@ -9,7 +9,7 @@ Image Endpoint
 
 .. code::
 
-   /hmac/trim/AxB:CxD/(adaptative-)(full-)fit-in/-Ex-F/HALIGN/VALIGN/smart/filters:FILTERNAME(ARGUMENT):FILTERNAME(ARGUMENT)/*IMAGE-URI*
+   /hmac/trim/AxB:CxD/(adaptive-)(full-)fit-in/-Ex-F/HALIGN/VALIGN/smart/filters:FILTERNAME(ARGUMENT):FILTERNAME(ARGUMENT)/*IMAGE-URI*
 
 -  hmac is the signature that ensures :doc:`security` ;
 -  trim removes surrounding space in images using top-left pixel color
@@ -44,7 +44,7 @@ If you need to specify the orientation from where to get the pixel
 color, just use ``/trim:top-left`` for the top-left pixel color or
 ``/trim:bottom-right`` for the bottom-right pixel color.
 
-Trim also supports color tolerance. The euclidian distance between the
+Trim also supports color tolerance. The euclidean distance between the
 colors of the reference pixel and the surrounding pixels is used. If the
 distance is within the tolerance they'll get trimmed. For a RGB image
 the tolerance would be within the range 0-442.

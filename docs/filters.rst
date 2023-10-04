@@ -7,7 +7,7 @@ How Filters Work
 Thumbor handles filters in a pipeline. This means that they
 run sequentially in the order they are specified!
 Given an original image with size :math:`60x40` and the
-following transformations:
+following transformations::
 
    http://localhost:8888/fit-in/100x100/filters:watermark(..):blur(..):fill(red,1):upscale()/https%3A%2F%2Fgithub.com%2Fthumbor%2Fthumbor%2Fraw%2Fmaster%2Fexample.jpg
 
@@ -31,6 +31,7 @@ Available Filters
    brightness
    contrast
    convolution
+   cover
    equalize
    extract_focal_points
    filling
@@ -46,6 +47,7 @@ Available Filters
    rgb
    rotate
    round_corners
+   saturation
    sharpen
    stretch
    strip_exif

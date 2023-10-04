@@ -13,7 +13,11 @@ from thumbor.storages import BaseStorage
 
 class Storage(BaseStorage):
     def __init__(
-        self, context, file_storage=None, crypto_storage=None, detector_storage=None,
+        self,
+        context,
+        file_storage=None,
+        crypto_storage=None,
+        detector_storage=None,
     ):
         BaseStorage.__init__(self, context)
 
@@ -85,7 +89,7 @@ class Storage(BaseStorage):
 
     async def exists(self, path):
         self._init_file_storage()
-        result = await (self.file_storage.exists(path))
+        result = await self.file_storage.exists(path)
         return result
 
     def resolve_original_photo_path(self, request, filename):

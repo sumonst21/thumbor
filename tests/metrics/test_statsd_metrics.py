@@ -10,12 +10,11 @@
 
 from preggy import expect
 
+import thumbor.metrics
+from tests.base import TestCase
+from thumbor.config import Config
 from thumbor.context import Context
 from thumbor.importer import Importer
-from thumbor.config import Config
-import thumbor.metrics
-
-from tests.base import TestCase
 
 
 class StatsdMetricsTestCase(TestCase):
@@ -34,4 +33,6 @@ class StatsdMetricsTestCase(TestCase):
     def test_should_not_fail_on_use(self):
         expect(self.context.metrics.incr("test.count")).not_to_be_an_error()
         expect(self.context.metrics.incr("test.count", 2)).not_to_be_an_error()
-        expect(self.context.metrics.timing("test.time", 100)).not_to_be_an_error()
+        expect(
+            self.context.metrics.timing("test.time", 100)
+        ).not_to_be_an_error()

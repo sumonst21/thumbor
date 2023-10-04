@@ -10,13 +10,18 @@
 
 from thumbor.ext.filters import _fill
 from thumbor.filters import BaseFilter, filter_method
+from thumbor.filters.blur import apply_blur
 
 
 class Filter(BaseFilter):
     def get_median_color(self):
         mode, data = self.engine.image_data_as_rgb()
         red, green, blue = _fill.apply(mode, data)
-        return "%02x%02x%02x" % (red, green, blue)
+        return "%02x%02x%02x" % (  # pylint: disable=consider-using-f-string
+            red,
+            green,
+            blue,
+        )
 
     @filter_method(r"[\w]+", BaseFilter.Boolean)
     async def fill(self, color, fill_transparent=False):
@@ -39,9 +44,14 @@ class Filter(BaseFilter):
             color = self.get_median_color()
 
         if color == "blur":
-            self.fill_engine.image = self.engine.image
+            self.fill_engine.image = self.fill_engine.gen_image(
+                self.engine.size, "transparent"
+            )
+            self.fill_engine.paste(self.engine, (0, 0))
+            mode, data = self.fill_engine.image_data_as_rgb()
+            data = apply_blur(mode, data, self.fill_engine.size, 50)
+            self.fill_engine.set_image_data(data)
             self.fill_engine.resize(target_width, target_height)
-            self.fill_engine.blur(50)
         else:
             try:
                 self.fill_engine.image = self.fill_engine.gen_image(
@@ -49,7 +59,7 @@ class Filter(BaseFilter):
                 )
             except (ValueError, RuntimeError):
                 self.fill_engine.image = self.fill_engine.gen_image(
-                    (target_width, target_height), "#%s" % color
+                    (target_width, target_height), f"#{color}"
                 )
 
         final_width, final_height = self.engine.size

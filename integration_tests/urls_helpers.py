@@ -82,6 +82,9 @@ FILTERS = [
     "filters:gifv(mp4)",
     "filters:max_age(600)",
     "filters:upscale()",
+    "filters:format(avif)",
+    "filters:format(heic)",
+    "filters:format(heif)",
     # one big filter 4-line string
     "filters:curve([(0,0),(255,255)],[(0,50),(16,51),(32,69),"
     "(58,85),(92,120),(128,170),(140,186),(167,225),"  # NOQA
@@ -98,6 +101,7 @@ ORIGINAL_IMAGES_BASE = [
     "rgba.png",
     "grayscale.jpg",
     "16bit.png",
+    "thumbor-exif.png",
 ]
 
 ORIGINAL_IMAGES_GIF_WEBP = [
@@ -105,6 +109,22 @@ ORIGINAL_IMAGES_GIF_WEBP = [
     "gradient.gif",
     "animated.gif",
 ]
+
+ALL_OPTIONS = (
+    METAS
+    + TRIMS
+    + CROPS
+    + FITINS
+    + SIZES
+    + H_ALIGNS
+    + V_ALIGNS
+    + SMARTS
+    + FILTERS
+)
+
+MAX_DATASET_SIZE = len(ALL_OPTIONS) * (
+    len(ORIGINAL_IMAGES_BASE) + len(ORIGINAL_IMAGES_GIF_WEBP)
+)
 
 
 class UrlsTester:
@@ -124,7 +144,7 @@ class UrlsTester:
         failed = False
 
         try:
-            result = await self.http_client.fetch(url, request_timeout=30)
+            result = await self.http_client.fetch(url, request_timeout=60)
         except Exception as err:  # pylint: disable=broad-except
             logging.exception("Error in %s: %s", url, err)
             error = err
@@ -146,10 +166,7 @@ def single_dataset(with_gif=True):
     images = ORIGINAL_IMAGES_BASE[:]
     if with_gif:
         images += ORIGINAL_IMAGES_GIF_WEBP
-    all_options = (
-        METAS + TRIMS + CROPS + FITINS + SIZES + H_ALIGNS + V_ALIGNS + SMARTS + FILTERS
-    )
-    return product(all_options, images)
+    return product(ALL_OPTIONS, images)
 
 
 def combined_dataset(with_gif=True):

@@ -15,7 +15,7 @@ import sys
 import warnings
 from os.path import dirname, expanduser
 from shutil import which
-from socketfromfd import fromfd as socket_from_fd
+from socket import socket
 
 import tornado.ioloop
 from PIL import Image
@@ -42,7 +42,9 @@ def get_config(config_path, use_environment=False):
 
     lookup_paths = [os.curdir, expanduser("~"), "/etc/", dirname(__file__)]
 
-    return Config.load(config_path, conf_name="thumbor.conf", lookup_paths=lookup_paths)
+    return Config.load(
+        config_path, conf_name="thumbor.conf", lookup_paths=lookup_paths
+    )
 
 
 def configure_log(config, log_level):
@@ -61,7 +63,11 @@ def get_importer(config):
     importer.import_modules()
 
     if importer.error_handler_class is not None:
-        importer.error_handler = importer.error_handler_class(config)
+        importer.error_handler = (
+            importer.error_handler_class(  # pylint: disable=not-callable
+                config
+            )
+        )
 
     return importer
 
@@ -82,6 +88,7 @@ def validate_config(config, server_parameters):
 
     if config.USE_GIFSICLE_ENGINE:
         server_parameters.gifsicle_path = which("gifsicle")
+
         if server_parameters.gifsicle_path is None:
             raise RuntimeError(
                 "If using USE_GIFSICLE_ENGINE configuration to True,"
@@ -98,17 +105,27 @@ def get_application(context):
     return context.modules.importer.import_class(context.app_class)(context)
 
 
+def get_socket_from_fd(fname_or_fd, *, non_blocking=False):
+    fd_number = get_as_integer(fname_or_fd)
+
+    if fd_number is not None:
+        sock = socket(fileno=fd_number)
+        if non_blocking:
+            sock.setblocking(False)
+    else:
+        sock = bind_unix_socket(fname_or_fd)
+
+    return sock
+
+
 def run_server(application, context):
     server = HTTPServer(application, xheaders=True)
 
     if context.server.fd is not None:
-        fd_number = get_as_integer(context.server.fd)
-        if fd_number is not None:
-            # TODO: replace with socket.socket(fileno=fd_number) when we require Python>=3.7
-            sock = socket_from_fd(fd_number, True)
-        else:
-            sock = bind_unix_socket(context.server.fd)
-
+        sock = get_socket_from_fd(
+            context.server.fd,
+            non_blocking=context.config.NON_BLOCKING_SOCKETS,
+        )
         server.add_socket(sock)
 
         logging.debug("thumbor starting at fd %s", context.server.fd)
@@ -120,11 +137,13 @@ def run_server(application, context):
         )
 
     server.start(context.server.processes)
+
     return server
 
 
 def main(arguments=None):
     """Runs thumbor server with the specified arguments."""
+
     if arguments is None:
         arguments = sys.argv[1:]
 

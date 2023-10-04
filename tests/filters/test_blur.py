@@ -27,7 +27,9 @@ class BlurFilterTestCase(FilterTestCase):
 
     @gen_test
     async def test_blur_filter_with_zero_radius(self):
-        image = await self.get_filtered("source.jpg", "thumbor.filters.blur", "blur(0)")
+        image = await self.get_filtered(
+            "source.jpg", "thumbor.filters.blur", "blur(0)"
+        )
         expected = self.get_fixture("source.jpg")
 
         ssim = self.get_ssim(image, expected)
@@ -35,7 +37,9 @@ class BlurFilterTestCase(FilterTestCase):
 
     @gen_test
     async def test_blur_filter_without_sigma(self):
-        image = await self.get_filtered("source.jpg", "thumbor.filters.blur", "blur(8)")
+        image = await self.get_filtered(
+            "source.jpg", "thumbor.filters.blur", "blur(8)"
+        )
         expected = self.get_fixture("blur2.jpg")
 
         ssim = self.get_ssim(image, expected)
@@ -57,6 +61,32 @@ class BlurFilterTestCase(FilterTestCase):
             "256_color_palette.png", "thumbor.filters.blur", "blur(10)"
         )
         expected = self.get_fixture("256_color_palette_blur_result.png")
+
+        ssim = self.get_ssim(image, expected)
+        expect(ssim).to_be_greater_than(0.99)
+
+    @gen_test
+    async def test_blur_filter_png_with_transparency_rgba_mode(self):
+        image = await self.get_filtered(
+            "PNG_transparency_demonstration_1.png",
+            "thumbor.filters.blur",
+            "blur(10)",
+            mode="RGBA",
+        )
+        expected = self.get_fixture("blur4.png", mode="RGBA")
+
+        ssim = self.get_ssim(image, expected)
+        expect(ssim).to_be_greater_than(0.99)
+
+    @gen_test
+    async def test_blur_filter_png_with_transparency_la_mode(self):
+        image = await self.get_filtered(
+            "PNG_transparency_demonstration_1.png",
+            "thumbor.filters.blur",
+            "blur(10)",
+            mode="LA",
+        )
+        expected = self.get_fixture("blur4.png", mode="LA")
 
         ssim = self.get_ssim(image, expected)
         expect(ssim).to_be_greater_than(0.99)

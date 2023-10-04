@@ -25,7 +25,7 @@ class MockTransport(Transport):
     """
 
     def __init__(self, options=None):
-        super(MockTransport, self).__init__(options=options)
+        super().__init__(options=options)
         self.captured_events = []
 
     def capture_event(self, event):
@@ -34,7 +34,10 @@ class MockTransport(Transport):
 
 class FakeRequest:
     def __init__(self):
-        self.headers = {"header1": "value1", "Cookie": "cookie1=value; cookie2=value2;"}
+        self.headers = {
+            "header1": "value1",
+            "Cookie": "cookie1=value; cookie2=value2;",
+        }
 
         self.url = "test/"
         self.method = "GET"
@@ -44,7 +47,7 @@ class FakeRequest:
         self.remote_ip = "127.0.0.1"
 
     def full_url(self):
-        return "http://test/%s" % self.url
+        return f"http://test/{self.url}"
 
 
 class FakeHandler:
@@ -78,7 +81,7 @@ class InvalidSentryTestCase(TestCase):
 
 class SentryTestCase(TestCase):
     def setUp(self):
-        super(SentryTestCase, self).setUp()
+        super().setUp()
         self.app = self.get_app()
 
         self.transport_mock = MockTransport()
@@ -87,7 +90,9 @@ class SentryTestCase(TestCase):
         self.http_handler = FakeHandler()
 
     def get_server(self):
-        server = ServerParameters(8889, "localhost", "thumbor.conf", None, "info", None)
+        server = ServerParameters(
+            8889, "localhost", "thumbor.conf", None, "info", None
+        )
         server.security_key = "ACME-SEC"
         return server
 
@@ -113,7 +118,9 @@ class SentryTestCase(TestCase):
 
         event = self.transport_mock.captured_events[0]
 
-        expect(event["exception"]["values"][0]["type"]).to_equal("RuntimeError")
+        expect(event["exception"]["values"][0]["type"]).to_equal(
+            "RuntimeError"
+        )
 
         expect(event["environment"]).to_equal("env")
 
@@ -134,7 +141,9 @@ class SentryTestCase(TestCase):
         expect(request["headers"]).to_length(2)
 
         expect(request["headers"]).to_include("Cookie")
-        expect(request["headers"]["Cookie"]).to_equal("cookie1=value; cookie2=value2;")
+        expect(request["headers"]["Cookie"]).to_equal(
+            "cookie1=value; cookie2=value2;"
+        )
         expect(request["headers"]["header1"]).to_equal("value1")
 
         expect(request["query_string"]).to_equal("a=1&b=2")

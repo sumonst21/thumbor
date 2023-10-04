@@ -7,14 +7,14 @@
 # Licensed under the MIT license:
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2011 globo.com thumbor@googlegroups.com
+from unittest import TestCase, mock
 
-from unittest import TestCase
-
-import mock
 from preggy import expect
 
 import thumbor.server
-from tests.fixtures.custom_error_handler import ErrorHandler as CustomErrorHandler
+from tests.fixtures.custom_error_handler import (
+    ErrorHandler as CustomErrorHandler,
+)
 from thumbor.app import ThumborServiceApp
 from thumbor.config import Config
 from thumbor.server import (
@@ -46,7 +46,9 @@ class ServerTestCase(TestCase):
             expect(config.ENGINE).to_be_like("thumbor.engines.pil")
 
     def test_can_get_config_with_env_enabled(self):
-        config = get_config("./tests/fixtures/thumbor_config_server_test.conf", True)
+        config = get_config(
+            "./tests/fixtures/thumbor_config_server_test.conf", True
+        )
 
         with mock.patch.dict("os.environ", {"ENGINE": "test"}):
             expect(config).not_to_be_null()
@@ -58,11 +60,11 @@ class ServerTestCase(TestCase):
         conf = Config()
         configure_log(conf, "DEBUG")
 
-        params = dict(
-            datefmt="%Y-%m-%d %H:%M:%S",
-            level=10,
-            format="%(asctime)s %(name)s:%(levelname)s %(message)s",
-        )
+        params = {
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+            "level": 10,
+            "format": "%(asctime)s %(name)s:%(levelname)s %(message)s",
+        }
 
         basic_config_mock.assert_called_with(**params)
 
@@ -71,7 +73,9 @@ class ServerTestCase(TestCase):
         conf = Config(THUMBOR_LOG_CONFIG={"level": "INFO"})
         configure_log(conf, "DEBUG")
 
-        params = dict(level="INFO",)
+        params = {
+            "level": "INFO",
+        }
 
         dict_config_mock.assert_called_with(params)
 
@@ -91,7 +95,9 @@ class ServerTestCase(TestCase):
 
         expect(importer).not_to_be_null()
         expect(importer.error_handler_class).not_to_be_null()
-        expect(importer.error_handler_class).to_be_instance_of(CustomErrorHandler)
+        expect(importer.error_handler_class).to_be_instance_of(
+            CustomErrorHandler
+        )
 
     def test_validate_config_security_key(self):
         server_parameters = mock.Mock(security_key=None)
@@ -161,7 +167,9 @@ class ServerTestCase(TestCase):
     def test_can_run_server_with_default_params(self, server_mock):
         application = mock.Mock()
         context = mock.Mock()
-        context.server = mock.Mock(fd=None, port=1234, ip="0.0.0.0", processes=1)
+        context.server = mock.Mock(
+            fd=None, port=1234, ip="0.0.0.0", processes=1
+        )
 
         server_instance_mock = mock.Mock()
         server_mock.return_value = server_instance_mock
@@ -175,7 +183,9 @@ class ServerTestCase(TestCase):
     def test_can_run_server_with_multiple_processes(self, server_mock):
         application = mock.Mock()
         context = mock.Mock()
-        context.server = mock.Mock(fd=None, port=1234, ip="0.0.0.0", processes=5)
+        context.server = mock.Mock(
+            fd=None, port=1234, ip="0.0.0.0", processes=5
+        )
 
         server_instance_mock = mock.Mock()
         server_mock.return_value = server_instance_mock
@@ -185,8 +195,8 @@ class ServerTestCase(TestCase):
         server_instance_mock.start.assert_called_with(5)
 
     @mock.patch.object(thumbor.server, "HTTPServer")
-    @mock.patch.object(thumbor.server, "socket_from_fd")
-    def test_can_run_server_with_fd(self, socket_from_fd_mock, server_mock):
+    @mock.patch.object(thumbor.server, "socket", autospec=True)
+    def test_can_run_server_with_fd(self, socket_mock, server_mock):
         application = mock.Mock()
         context = mock.Mock()
         context.server = mock.Mock(fd=11, port=1234, ip="0.0.0.0", processes=1)
@@ -194,18 +204,47 @@ class ServerTestCase(TestCase):
         server_instance_mock = mock.Mock()
         server_mock.return_value = server_instance_mock
 
-        socket_from_fd_mock.return_value = "socket mock"
-
         run_server(application, context)
-        server_instance_mock.add_socket.assert_called_with("socket mock")
+        socket_mock.assert_called_with(fileno=11)
+        server_instance_mock.add_socket.assert_called_with(
+            socket_mock.return_value
+        )
+        server_instance_mock.start.assert_called_with(1)
+
+    @mock.patch.object(thumbor.server, "HTTPServer")
+    @mock.patch.object(thumbor.server, "socket", autospec=True)
+    def test_can_run_server_with_fd_non_blocking(
+        self, socket_mock, server_mock
+    ):
+        server_parameters = mock.Mock(security_key=None)
+        conf = Config(SECURITY_KEY="test", NON_BLOCKING_SOCKETS=True)
+        importer = get_importer(conf)
+        context = get_context(server_parameters, conf, importer)
+
+        context.server = mock.Mock(fd=11, port=1234, ip="0.0.0.0", processes=1)
+
+        server_instance_mock = mock.Mock()
+        server_mock.return_value = server_instance_mock
+
+        application = mock.Mock()
+        run_server(application, context)
+        socket_mock.assert_called_with(fileno=11)
+        socket_mock.return_value.setblocking.assert_called_with(False)
+        server_instance_mock.add_socket.assert_called_with(
+            socket_mock.return_value
+        )
         server_instance_mock.start.assert_called_with(1)
 
     @mock.patch.object(thumbor.server, "HTTPServer")
     @mock.patch.object(thumbor.server, "bind_unix_socket")
-    def test_can_run_server_with_unix_socket(self, bind_unix_socket, server_mock):
+    def test_can_run_server_with_unix_socket(
+        self, bind_unix_socket, server_mock
+    ):
         application = mock.Mock()
         context = mock.Mock()
-        context.server = mock.Mock(fd="/path/bin", port=1234, ip="0.0.0.0", processes=1)
+        context.server = mock.Mock(
+            fd="/path/bin", port=1234, ip="0.0.0.0", processes=1
+        )
 
         server_instance_mock = mock.Mock()
         server_mock.return_value = server_instance_mock

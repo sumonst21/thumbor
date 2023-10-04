@@ -42,7 +42,11 @@ class Transformer:
             self.context.request.engine.extension == ".gif"
             and self.context.config.USE_GIFSICLE_ENGINE
         )
-        if self.context.request.trim is None or not TRIM_ENABLED or is_gifsicle:
+        if (
+            self.context.request.trim is None
+            or not TRIM_ENABLED
+            or is_gifsicle
+        ):
             return
 
         mode, data = self.engine.image_data_as_rgb()
@@ -176,8 +180,8 @@ class Transformer:
             self.context.request.detection_error = True
 
     async def do_smart_detection(self):
-        focal_points = await (
-            self.context.modules.storage.get_detector_data(self.smart_storage_key)
+        focal_points = await self.context.modules.storage.get_detector_data(
+            self.smart_storage_key
         )
         points_from_storage = focal_points is not None
         if focal_points is None:
@@ -188,7 +192,9 @@ class Transformer:
 
         if focal_points is not None:
             for point in focal_points:
-                self.context.request.focal_points.append(FocalPoint.from_dict(point))
+                self.context.request.focal_points.append(
+                    FocalPoint.from_dict(point)
+                )
 
         if (
             self.context.request.focal_points
@@ -209,7 +215,9 @@ class Transformer:
 
         The actual work happens in self.img_operation_worker
         """
-        await self.context.thread_pool.queue(operation=self.img_operation_worker,)
+        await self.context.thread_pool.queue(
+            operation=self.img_operation_worker,
+        )
 
     def img_operation_worker(self):
         if (
@@ -255,7 +263,9 @@ class Transformer:
                 crop["left"] = crop["right"] = crop["top"] = crop["bottom"] = 0
                 return
 
-            self.engine.crop(crop["left"], crop["top"], crop["right"], crop["bottom"])
+            self.engine.crop(
+                crop["left"], crop["top"], crop["right"], crop["bottom"]
+            )
 
     def auto_crop(self):
         source_width, source_height = self.engine.size
@@ -271,25 +281,41 @@ class Transformer:
 
         focal_x, focal_y = self.get_center_of_mass()
 
-        if self.target_width / source_width > self.target_height / source_height:
+        if (
+            self.target_width / source_width
+            > self.target_height / source_height
+        ):
             crop_width = source_width
             crop_height = int(
                 round(source_width * self.target_height / target_width, 0)
             )
         else:
             crop_width = int(
-                round(math.ceil(self.target_width * source_height / target_height), 0,)
+                round(
+                    math.ceil(
+                        self.target_width * source_height / target_height
+                    ),
+                    0,
+                )
             )
             crop_height = source_height
 
         crop_left = int(
-            round(min(max(focal_x - (crop_width / 2), 0.0), source_width - crop_width,))
+            round(
+                min(
+                    max(focal_x - (crop_width / 2), 0.0),
+                    source_width - crop_width,
+                )
+            )
         )
         crop_right = min(crop_left + crop_width, source_width)
 
         crop_top = int(
             round(
-                min(max(focal_y - (crop_height / 2), 0.0), source_height - crop_height,)
+                min(
+                    max(focal_y - (crop_height / 2), 0.0),
+                    source_height - crop_height,
+                )
             )
         )
         crop_bottom = min(crop_top + crop_height, source_height)
@@ -320,7 +346,10 @@ class Transformer:
 
     def resize(self):
         source_width, source_height = self.engine.size
-        if self.target_width == source_width and self.target_height == source_height:
+        if (
+            self.target_width == source_width
+            and self.target_height == source_height
+        ):
             return
         self.engine.resize(
             self.target_width or 1, self.target_height or 1
@@ -332,8 +361,14 @@ class Transformer:
         # invert width and height if image orientation is not the
         # same as request orientation and need adaptive
         if self.context.request.adaptive and (
-            (source_width < source_height and self.target_width > self.target_height)
-            or (source_width > source_height and self.target_width < self.target_height)
+            (
+                source_width < source_height
+                and self.target_width > self.target_height
+            )
+            or (
+                source_width > source_height
+                and self.target_width < self.target_height
+            )
         ):
             tmp = self.context.request.width
             self.context.request.width = self.context.request.height

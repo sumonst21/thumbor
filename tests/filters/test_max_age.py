@@ -18,7 +18,7 @@ from thumbor.importer import Importer
 
 class BaseMaxAgeFilterTestCase(TestCase):
     def get_fixture_path(self, name):
-        return "./tests/fixtures/%s" % name
+        return f"./tests/fixtures/{name}"
 
     def get_config(self):
         return Config.load(self.get_fixture_path("max_age_conf.py"))
@@ -32,7 +32,9 @@ class BaseMaxAgeFilterTestCase(TestCase):
 class MaxAgeFilterTestCase(BaseMaxAgeFilterTestCase):
     @gen_test
     async def test_max_age_filter_with_regular_image(self):
-        response = await self.async_fetch("/unsafe/smart/image.jpg", method="GET")
+        response = await self.async_fetch(
+            "/unsafe/smart/image.jpg", method="GET"
+        )
         expect(response.code).to_equal(200)
         expect(response.headers["Cache-Control"]).to_equal("max-age=2,public")
         expect(response.headers).to_include("Expires")
@@ -49,13 +51,15 @@ class MaxAgeFilterTestCase(BaseMaxAgeFilterTestCase):
 
 class MaxAgeDetectorFilterTestCase(BaseMaxAgeFilterTestCase):
     def get_config(self):
-        config = super(MaxAgeDetectorFilterTestCase, self).get_config()
+        config = super().get_config()
         config.DETECTORS = ["tests.fixtures.prevent_result_storage_detector"]
         return config
 
     @gen_test
     async def test_max_age_filter_with_non_storaged_image(self):
-        response = await self.async_fetch("/unsafe/smart/image.jpg", method="GET")
+        response = await self.async_fetch(
+            "/unsafe/smart/image.jpg", method="GET"
+        )
         expect(response.code).to_equal(200)
         expect(response.headers["Cache-Control"]).to_equal("max-age=1,public")
         expect(response.headers).to_include("Expires")
@@ -63,13 +67,15 @@ class MaxAgeDetectorFilterTestCase(BaseMaxAgeFilterTestCase):
 
 class MaxAgeErrorDectectorFilterTestCase(BaseMaxAgeFilterTestCase):
     def get_config(self):
-        config = super(MaxAgeErrorDectectorFilterTestCase, self).get_config()
+        config = super().get_config()
         config.DETECTORS = ["tests.fixtures.detection_error_detector"]
         return config
 
     @gen_test
     async def test_with_detection_error_image(self):
-        response = await self.async_fetch("/unsafe/smart/image.jpg", method="GET")
+        response = await self.async_fetch(
+            "/unsafe/smart/image.jpg", method="GET"
+        )
         expect(response.code).to_equal(200)
         expect(response.headers["Cache-Control"]).to_equal("max-age=1,public")
         expect(response.headers).to_include("Expires")

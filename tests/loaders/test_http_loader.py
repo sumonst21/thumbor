@@ -51,7 +51,7 @@ class EchoUserAgentHandler(tornado.web.RequestHandler):
 class EchoAllHeadersHandler(tornado.web.RequestHandler):
     async def get(self):
         for header, value in sorted(self.request.headers.items()):
-            self.write("%s:%s\n" % (header, value))
+            self.write(f"{header}:{value}\n")
 
 
 class HandlerMock:
@@ -121,16 +121,24 @@ class ValidateUrlTestCase(TestCase):
             re.compile(r"https://www\.google\.com/img/.*"),
         ]
         ctx = Context(None, config, None)
-        expect(loader.validate(ctx, "http://www.google.com/logo.jpg")).to_be_false()
-        expect(loader.validate(ctx, "http://s2.glbimg.com/logo.jpg")).to_be_false()
+        expect(
+            loader.validate(ctx, "http://www.google.com/logo.jpg")
+        ).to_be_false()
+        expect(
+            loader.validate(ctx, "http://s2.glbimg.com/logo.jpg")
+        ).to_be_false()
         expect(
             loader.validate(
                 ctx,
                 "/glob=:sfoir%20%20%3Co-pmb%20%20%20%20_%20%20%20%200%20%20g.-%3E%3Ca%20hplass=",  # NOQA, pylint: disable=line-too-long
             )
         ).to_be_false()
-        expect(loader.validate(ctx, "https://www.google.com/img/logo.jpg")).to_be_true()
-        expect(loader.validate(ctx, "http://s.glbimg.com/logo.jpg")).to_be_true()
+        expect(
+            loader.validate(ctx, "https://www.google.com/img/logo.jpg")
+        ).to_be_true()
+        expect(
+            loader.validate(ctx, "http://s.glbimg.com/logo.jpg")
+        ).to_be_true()
 
     def test_without_allowed_sources(self):
         config = Config()
@@ -177,7 +185,7 @@ class DummyAsyncHttpClientTestCase(TestCase):
 
     def tearDown(self):
         AsyncHTTPClient().close()  # clean up singleton instance
-        super(DummyAsyncHttpClientTestCase, self).tearDown()
+        super().tearDown()
 
 
 class HttpLoaderTestCase(DummyAsyncHttpClientTestCase):
@@ -196,6 +204,19 @@ class HttpLoaderTestCase(DummyAsyncHttpClientTestCase):
         expect(result).to_be_instance_of(LoaderResult)
         expect(result.buffer).to_equal("Hello")
         expect(result.successful).to_be_true()
+
+    @gen_test
+    async def test_load_not_found(self):
+        url = self.get_url("/not-found.jpg")
+        config = Config()
+        config.HTTP_LOADER_CURL_ASYNC_HTTP_CLIENT = False
+        ctx = Context(None, config, None)
+
+        result = await loader.load(ctx, url)
+        expect(result).to_be_instance_of(LoaderResult)
+        expect(result.buffer).to_be_null()
+        expect(result.successful).to_be_false()
+        expect(result.error).to_equal(LoaderResult.ERROR_NOT_FOUND)
 
     @gen_test
     async def test_load_with_utf8_url(self):
@@ -293,7 +314,9 @@ class HttpLoaderWithHeadersForwardingTestCase(DummyAsyncHttpClientTestCase):
 
         result = await loader.load(ctx, url)
         expect(result).to_be_instance_of(LoaderResult)
-        expect(result.buffer.decode()).to_include("Accept:image/*;q=0.9,*/*;q=0.1\n")
+        expect(result.buffer.decode()).to_include(
+            "Accept:image/*;q=0.9,*/*;q=0.1\n"
+        )
 
 
 class HttpLoaderWithUserAgentForwardingTestCase(DummyAsyncHttpClientTestCase):
@@ -326,6 +349,27 @@ class HttpLoaderWithUserAgentForwardingTestCase(DummyAsyncHttpClientTestCase):
         result = await loader.load(ctx, url)
         expect(result).to_be_instance_of(LoaderResult)
         expect(result.buffer).to_equal("DEFAULT_USER_AGENT")
+
+
+class HttpCurlNotFoundLoaderTestCase(DummyAsyncHttpClientTestCase):
+    def get_app(self):
+        application = tornado.web.Application([(r"/", TimeoutHandler)])
+
+        return application
+
+    @gen_test
+    async def test_load_not_found(self):
+        url = self.get_url("/not-found.jpg")
+        config = Config()
+        config.HTTP_LOADER_CURL_ASYNC_HTTP_CLIENT = True
+        config.HTTP_LOADER_REQUEST_TIMEOUT = 1
+        ctx = Context(None, config, None)
+
+        result = await loader.load(ctx, url)
+        expect(result).to_be_instance_of(LoaderResult)
+        expect(result.buffer).to_be_null()
+        expect(result.successful).to_be_false()
+        expect(result.error).to_equal(LoaderResult.ERROR_NOT_FOUND)
 
 
 class HttpCurlTimeoutLoaderTestCase(DummyAsyncHttpClientTestCase):

@@ -91,13 +91,13 @@ def int2long(i):
 # getheader gives a 87a header and a color palette (two elements in a list).
 # getdata()[0] gives the Image Descriptor up to (including)
 # "LZW min code size".
-# getdatas()[1:] is the image data itself in chuncks of 256 bytes (well
+# getdatas()[1:] is the image data itself in chunks of 256 bytes (well
 # technically the first byte says how many bytes follow, after which that
 # amount (max 255) follows).
 
 
 def checkImages(images):
-    """ checkImages(images)
+    """checkImages(images)
     Check numpy images and correct intensity range etc.
     The same for all movie formats.
     """
@@ -138,14 +138,14 @@ def checkImages(images):
 
 
 class GifWriter:
-    """ GifWriter()
+    """GifWriter()
 
     Class that contains methods for helping write the animated GIF file.
 
     """
 
     def getheaderAnim(self, im):
-        """ getheaderAnim(im)
+        """getheaderAnim(im)
 
         Get animation header. To replace PILs getheader()[0]
 
@@ -157,7 +157,7 @@ class GifWriter:
         return bb
 
     def getImageDescriptor(self, im, xy=None):
-        """ getImageDescriptor(im, xy=None)
+        """getImageDescriptor(im, xy=None)
 
         Used for the local color table properties per image.
         Otherwise global color table applies to all frames irrespective of
@@ -192,7 +192,7 @@ class GifWriter:
         return bb
 
     def getAppExt(self, loops=float("inf")):
-        """ getAppExt(loops=float('inf'))
+        """getAppExt(loops=float('inf'))
 
         Application extention. This part specifies the amount of loops.
         If loops is 0 or inf, it goes on infinitely.
@@ -200,7 +200,7 @@ class GifWriter:
         """
 
         if loops == 0 or loops == float("inf"):
-            loops = 2 ** 16 - 1
+            loops = 2**16 - 1
             # bb = "" application extension should not be used
             #         (the extension interprets zero loops
             #          to mean an infinite number of loops)
@@ -214,7 +214,7 @@ class GifWriter:
         return bb
 
     def getGraphicsControlExt(self, duration=0.1, dispose=2):
-        """ getGraphicsControlExt(duration=0.1, dispose=2)
+        """getGraphicsControlExt(duration=0.1, dispose=2)
 
         Graphics Control Extension. A sort of header at the start of
         each image. Specifies duration and transparancy.
@@ -242,7 +242,7 @@ class GifWriter:
         return bb
 
     def handleSubRectangles(self, images, subRectangles):
-        """ handleSubRectangles(images)
+        """handleSubRectangles(images)
 
         Handle the sub-rectangle stuff. If the rectangles are given by the
         user, the values are checked. Otherwise the subrectangles are
@@ -292,7 +292,7 @@ class GifWriter:
         return images, xy
 
     def getSubRectangles(self, ims):
-        """ getSubRectangles(ims)
+        """getSubRectangles(ims)
 
         Calculate the minimal rectangles that need updating each frame.
         Returns a two-element tuple containing the cropped images and a
@@ -320,7 +320,6 @@ class GifWriter:
         # Iterate over images
         prev = ims[0]
         for im in ims[1:]:
-
             # Get difference, sum over colors
             diff = np.abs(im - prev)
             if diff.ndim == 3:
@@ -348,7 +347,7 @@ class GifWriter:
         return ims2, xy
 
     def convertImagesToPIL(self, images, dither, nq=0):
-        """ convertImagesToPIL(images, nq=0)
+        """convertImagesToPIL(images, nq=0)
 
         Convert images to Paletted PIL images, which can then be
         written to a single animaged GIF.
@@ -382,16 +381,18 @@ class GifWriter:
         return images2
 
     def writeGifToFile(self, fp, images, durations, loops, xys, disposes):
-        """ writeGifToFile(fp, images, durations, loops, xys, disposes)
+        """writeGifToFile(fp, images, durations, loops, xys, disposes)
 
         Given a set of images writes the bytes to the specified stream.
 
         """
-        # Obtain palette for all images and count each occurance
+        # Obtain palette for all images and count each occurrence
         palettes, occur = [], []
         for im in images:
             header, usedPaletteColors = getheader(im)
-            palettes.append(header[-1])  # Last part of the header is the frame palette
+            palettes.append(
+                header[-1]
+            )  # Last part of the header is the frame palette
         for palette in palettes:
             occur.append(palettes.count(palette))
 
@@ -403,7 +404,6 @@ class GifWriter:
         firstFrame = True
 
         for im, palette in zip(images, palettes):
-
             if firstFrame:
                 # Write header
 
@@ -466,7 +466,7 @@ def writeGif(
     subRectangles=True,
     dispose=None,
 ):
-    """ writeGif(filename, images, duration=0.1, repeat=True, dither=False,
+    """writeGif(filename, images, duration=0.1, repeat=True, dither=False,
                     nq=0, subRectangles=True, dispose=None)
 
     Write an animated gif from the specified images.
@@ -482,7 +482,7 @@ def writeGif(
     duration : scalar or list of scalars
         The duration for all frames, or (if a list) for each frame.
     repeat : bool or integer
-        The amount of loops. If True, loops infinitetely.
+        The amount of loops. If True, loops infinitely.
     dither : bool
         Whether to apply dithering
     nq : integer
@@ -564,7 +564,7 @@ def writeGif(
 
 
 def readGif(filename, asNumpy=True):
-    """ readGif(filename, asNumpy=True)
+    """readGif(filename, asNumpy=True)
 
     Read images from an animated GIF file.  Returns a list of numpy
     arrays, or, if asNumpy is false, a list if PIL images.
@@ -595,7 +595,9 @@ def readGif(filename, asNumpy=True):
             tmp = pilIm.convert()  # Make without palette
             a = np.asarray(tmp)
             if len(a.shape) == 0:
-                raise MemoryError("Too little memory to convert PIL image to array")
+                raise MemoryError(
+                    "Too little memory to convert PIL image to array"
+                )
             # Store, and next
             images.append(a)
             pilIm.seek(pilIm.tell() + 1)

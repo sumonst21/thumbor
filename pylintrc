@@ -1,3 +1,6 @@
+[MASTER]
+ignore=tests/snapshots
+
 [MESSAGES CONTROL]
 
 # Disable the message, report, category or checker with the given id(s). You
@@ -13,7 +16,6 @@ disable=
       missing-function-docstring,
       missing-module-docstring,
       missing-class-docstring,
-      bad-continuation,
       c-extension-no-member,
       too-many-arguments,
       assignment-from-none,
@@ -25,4 +27,6 @@ disable=
       broad-except,
       too-many-locals,
       too-many-public-methods,
-      fixme
+      fixme,
+      R0801,
+      deprecated-module,

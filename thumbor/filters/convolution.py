@@ -15,8 +15,8 @@ from thumbor.filters import BaseFilter, filter_method
 
 class Filter(BaseFilter):
     """
-        Usage: /filters:convolution(<semicolon separated matrix items>, <number of columns in matrix>, <should normalize boolean>)
-        Example of blur filter: /filters:convolution(1;2;1;2;4;2;1;2;1,3,true)/
+    Usage: /filters:convolution(<semicolon separated matrix items>, <number of columns in matrix>, <should normalize boolean>)
+    Example of blur filter: /filters:convolution(1;2;1;2;4;2;1;2;1,3,true)/
     """
 
     @filter_method(
@@ -24,7 +24,7 @@ class Filter(BaseFilter):
         BaseFilter.PositiveNumber,
         BaseFilter.Boolean,
     )
-    def convolution(self, matrix, columns, should_normalize=True):
+    async def convolution(self, matrix, columns, should_normalize=True):
         matrix = tuple(matrix.split(";"))
         mode, data = self.engine.image_data_as_rgb()
         imgdata = _convolution.apply(

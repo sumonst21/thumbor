@@ -8,9 +8,8 @@
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2011 globo.com thumbor@googlegroups.com
 
-from unittest import TestCase
+from unittest import TestCase, mock
 
-import mock
 from preggy import expect
 
 from thumbor.config import Config
@@ -57,7 +56,9 @@ class ContextTestCase(TestCase):
 
     @staticmethod
     def test_can_create_context_without_importer_metrics():
-        cfg = Config(METRICS="",)
+        cfg = Config(
+            METRICS="",
+        )
         importer = Importer(cfg)
         ctx = Context(config=cfg, importer=importer)
 
@@ -75,7 +76,9 @@ class ContextTestCase(TestCase):
             app_class="thumbor.app.ThumborServiceApp",
         )
 
-        cfg = Config(APP_CLASS="config.app",)
+        cfg = Config(
+            APP_CLASS="config.app",
+        )
         importer = Importer(cfg)
         ctx = Context(config=cfg, importer=importer, server=server)
 
@@ -92,7 +95,9 @@ class ContextTestCase(TestCase):
             app_class="server.app",
         )
 
-        cfg = Config(APP_CLASS="config.app",)
+        cfg = Config(
+            APP_CLASS="config.app",
+        )
         importer = Importer(cfg)
         ctx = Context(config=cfg, importer=importer, server=server)
 
@@ -119,9 +124,9 @@ class ServerParametersTestCase(TestCase):
         expect(params.keyfile).to_equal("./tests/fixtures/thumbor.key")
         expect(params.log_level).to_equal("debug")
         expect(params.app_class).to_equal("app")
-        expect(params._security_key).to_equal(  # pylint: disable=protected-access
-            "SECURITY_KEY_FILE"
-        )
+        expect(
+            params._security_key  # pylint: disable=protected-access
+        ).to_equal("SECURITY_KEY_FILE")
         expect(params.fd).to_equal("fd")
         expect(params.gifsicle_path).to_equal("gifsicle_path")
 
@@ -140,10 +145,10 @@ class ServerParametersTestCase(TestCase):
             gifsicle_path="gifsicle_path",
         )
 
-        params.security_key = u"testé"
-        expect(params._security_key).to_equal(  # pylint: disable=protected-access
-            u"testé".encode("utf-8")
-        )
+        params.security_key = "testé"
+        expect(
+            params._security_key  # pylint: disable=protected-access
+        ).to_equal("testé".encode("utf-8"))
 
     @staticmethod
     def test_loading_does_nothing_if_no_keyfile():
@@ -157,7 +162,9 @@ class ServerParametersTestCase(TestCase):
             fd="fd",
             gifsicle_path="gifsicle_path",
         )
-        expect(params._security_key).to_be_null()  # pylint: disable=protected-access
+        expect(
+            params._security_key  # pylint: disable=protected-access
+        ).to_be_null()
 
     @staticmethod
     def test_cant_load_invalid_security_key_file():
@@ -186,7 +193,9 @@ class RequestParametersTestCase(TestCase):
         expect(params.debug).to_be_false()
         expect(params.meta).to_be_false()
         expect(params.trim).to_be_null()
-        expect(params.crop).to_be_like({"top": 0, "right": 0, "bottom": 0, "left": 0})
+        expect(params.crop).to_be_like(
+            {"top": 0, "right": 0, "bottom": 0, "left": 0}
+        )
         expect(params.should_crop).to_be_false()
 
         expect(params.adaptive).to_be_false()
@@ -237,7 +246,10 @@ class RequestParametersTestCase(TestCase):
     @staticmethod
     def test_can_get_params_with_crop():
         params = RequestParameters(
-            crop_left=10, crop_right=20, crop_top=30, crop_bottom=40,
+            crop_left=10,
+            crop_right=20,
+            crop_top=30,
+            crop_bottom=40,
         )
         expect(params.crop).to_be_like(
             {"top": 30, "right": 20, "bottom": 40, "left": 10}
@@ -255,7 +267,10 @@ class RequestParametersTestCase(TestCase):
 
     @staticmethod
     def test_can_get_orig_dimensions():
-        params = RequestParameters(width="orig", height="orig",)
+        params = RequestParameters(
+            width="orig",
+            height="orig",
+        )
         expect(params.width).to_equal("orig")
         expect(params.height).to_equal("orig")
 
@@ -280,7 +295,9 @@ class RequestParametersTestCase(TestCase):
 class ContextImporterTestCase(TestCase):
     @staticmethod
     def test_can_create_context_importer():
-        cfg = Config(RESULT_STORAGE="thumbor.result_storages.file_storage",)
+        cfg = Config(
+            RESULT_STORAGE="thumbor.result_storages.file_storage",
+        )
         importer = Importer(cfg)
         importer.import_modules()
         ctx = Context(config=cfg, importer=importer)
@@ -292,7 +309,9 @@ class ContextImporterTestCase(TestCase):
         expect(ctx_importer.gif_engine).to_be_instance_of(importer.gif_engine)
 
         expect(ctx_importer.storage).to_be_instance_of(importer.storage)
-        expect(ctx_importer.result_storage).to_be_instance_of(importer.result_storage)
+        expect(ctx_importer.result_storage).to_be_instance_of(
+            importer.result_storage
+        )
         expect(ctx_importer.upload_photo_storage).to_be_instance_of(
             importer.upload_photo_storage
         )

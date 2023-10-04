@@ -12,10 +12,9 @@
 
 from os.path import abspath, dirname, join
 from struct import pack
-from unittest import TestCase
+from unittest import TestCase, mock
 from xml.etree.ElementTree import ParseError
 
-import mock
 from preggy import expect
 
 from thumbor.config import Config
@@ -34,7 +33,10 @@ def exif_str(exif_value):
 
 class BaseEngineTestCase(TestCase):
     def get_context(self):
-        cfg = Config(SECURITY_KEY="ACME-SEC", ENGINE="thumbor.engines",)
+        cfg = Config(
+            SECURITY_KEY="ACME-SEC",
+            ENGINE="thumbor.engines",
+        )
         cfg.STORAGE = "thumbor.storages.no_storage"
 
         return Context(config=cfg)
@@ -59,6 +61,7 @@ class BaseEngineTestCase(TestCase):
     def setUp(self):
         self.image = ((1, 2), (3, 4))
         self.context = self.get_context()
+        self.context.request = mock.MagicMock(width=0, height=0)
         self.engine = BaseEngine(self.context)
         self.engine.flip_horizontally = mock.MagicMock()
         self.engine.flip_horizontally.side_effect = self.flip_horizontally
@@ -102,7 +105,9 @@ class BaseEngineTestCase(TestCase):
 
     @mock.patch("thumbor.engines.cairosvg", new=None)
     @mock.patch("thumbor.engines.logger.error")
-    def test_not_imported_cairosvg_failed_to_convert_svg_to_png(self, mock_log_error):
+    def test_not_imported_cairosvg_failed_to_convert_svg_to_png(
+        self, mock_log_error
+    ):
         buffer = """<svg width="10px" height="20px" viewBox="0 0 10 20"
                     xmlns="http://www.w3.org/2000/svg">
                         <rect width="100%" height="10" x="0" y="0"/>
@@ -112,13 +117,17 @@ class BaseEngineTestCase(TestCase):
         expect(buffer).to_equal(returned_buffer)
 
     def test_can_identify_msb_tiff(self):
-        with open(join(STORAGE_PATH, "gradient_msb_16bperchannel.tif"), "rb") as image:
+        with open(
+            join(STORAGE_PATH, "gradient_msb_16bperchannel.tif"), "rb"
+        ) as image:
             buffer = image.read()
         mime = self.engine.get_mimetype(buffer)
         expect(mime).to_equal("image/tiff")
 
     def test_can_identify_lsb_tiff(self):
-        with open(join(STORAGE_PATH, "gradient_lsb_16bperchannel.tif"), "rb") as image:
+        with open(
+            join(STORAGE_PATH, "gradient_lsb_16bperchannel.tif"), "rb"
+        ) as image:
             buffer = image.read()
         mime = self.engine.get_mimetype(buffer)
         expect(mime).to_equal("image/tiff")
@@ -153,6 +162,18 @@ class BaseEngineTestCase(TestCase):
                     </svg>"""
         mime = self.engine.get_mimetype(buffer)
         expect(mime).to_equal("image/svg+xml")
+
+    def test_can_identify_avif(self):
+        with open(join(STORAGE_PATH, "image.avif"), "rb") as image:
+            buffer = image.read()
+        mime = self.engine.get_mimetype(buffer)
+        expect(mime).to_equal("image/avif")
+
+    def test_can_identify_heic(self):
+        with open(join(STORAGE_PATH, "image.heic"), "rb") as image:
+            buffer = image.read()
+        mime = self.engine.get_mimetype(buffer)
+        expect(mime).to_equal("image/heif")
 
     def test_convert_svg_already_converted_to_png(self):
         svg_buffer = """<svg width="10px" height="20px" viewBox="0 0 10 20"

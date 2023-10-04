@@ -11,7 +11,7 @@
 import tempfile
 from os.path import expanduser, join
 
-import derpconf.config as config
+from derpconf import config
 from derpconf.config import Config
 
 from thumbor import __version__
@@ -20,7 +20,9 @@ from thumbor.handler_lists import BUILTIN_HANDLERS
 
 HOME = expanduser("~")
 
-Config.define("THUMBOR_LOG_CONFIG", None, "Logging configuration as json", "Logging")
+Config.define(
+    "THUMBOR_LOG_CONFIG", None, "Logging configuration as json", "Logging"
+)
 Config.define(
     "THUMBOR_LOG_FORMAT",
     "%(asctime)s %(name)s:%(levelname)s %(message)s",
@@ -68,7 +70,9 @@ Config.define(
     "Allowed domains for the http loader to download. These are regular expressions.",
     "Imaging",
 )
-Config.define("QUALITY", 80, "Quality index used for generated JPEG images", "Imaging")
+Config.define(
+    "QUALITY", 80, "Quality index used for generated JPEG images", "Imaging"
+)
 Config.define(
     "PROGRESSIVE_JPEG",
     True,
@@ -98,7 +102,7 @@ Config.define(
 Config.define(
     "PILLOW_RESAMPLING_FILTER",
     "LANCZOS",
-    "Specify resampling filter for Pillow resize method."
+    "Specify resampling filter for Pillow resize method. "
     "One of LANCZOS, NEAREST, BILINEAR, BICUBIC, HAMMING (Pillow>=3.4.0).",
     "Imaging",
 )
@@ -108,6 +112,58 @@ Config.define(
     None,
     "Quality index used for generated WebP images. If not set (None) the same level of "
     "JPEG quality will be used. If 100 the `lossless` flag will be used.",
+    "Imaging",
+)
+
+Config.define(
+    "AVIF_QUALITY",
+    None,
+    "Quality index used for generated AVIF images. If not set (None) the same "
+    "level of JPEG quality will be used. Controls the max quantizer setting, "
+    "with quality=0 corresponding to max quantizer 63, and quality=100 to "
+    "max quantizer=0",
+    "Imaging",
+)
+
+Config.define(
+    "AVIF_SPEED",
+    None,
+    "Quality/speed trade-off (0=slower-better, 10=fastest).",
+    "Imaging",
+)
+
+Config.define(
+    "AVIF_CODEC",
+    "auto",
+    "Codec to use for encoding AVIF images. Can be `auto`, `aom`, `rav1e`, "
+    "or `svt`, depending on what is compiled into libavif.",
+    "Imaging",
+)
+
+Config.define(
+    "AVIF_CODEC_FALLBACK",
+    "auto",
+    "Codec to use for encoding AVIF images if `AVIF_CODEC` cannot be used. "
+    "For instance, if AVIF_CODEC is `svt` but an image is too small or too "
+    "large to be encoded with that codec, the image will be encoded using "
+    "the codec from this setting instead.",
+    "Imaging",
+)
+
+Config.define(
+    "HEIF_QUALITY",
+    None,
+    "Quality index used for generated HEIF images. If not set (None) the same "
+    "level of JPEG quality will be used.",
+    "Imaging",
+)
+
+Config.define(
+    "SRGB_PROFILE",
+    None,
+    "Path to the file containing the sRGB ICC profile to use when images need "
+    "to be converted from other color spaces. If None, uses the default SRGB "
+    "profile from Pillow ImageCMS.",
     "Imaging",
 )
 
@@ -131,13 +187,34 @@ Config.define(
     "Imaging",
 )
 Config.define(
+    "AUTO_AVIF",
+    False,
+    "Specifies whether Avif format should be used automatically if the request accepts it "
+    "(via Accept header) and pillow-avif-plugin is enabled",
+    "Imaging",
+)
+Config.define(
+    "AUTO_JPG",
+    False,
+    "Specifies whether JPG format should be used automatically if the request accepts it "
+    "(via Accept header)",
+    "Imaging",
+)
+Config.define(
+    "AUTO_HEIF",
+    False,
+    "Specifies whether Heif format should be used automatically if the request accepts it "
+    "(via Accept header) and pillow-heif is enabled",
+    "Imaging",
+)
+Config.define(
     "AUTO_PNG_TO_JPG",
     False,
     "Specifies whether a PNG image should be used automatically if the png image has "
     "no transparency (via alpha layer). "
     "WARNING: Depending on case, this is not a good deal. "
     "This transformation maybe causes distortions or the size of image can increase. "
-    "Images with texts, for example, the result image maybe will be distorced. "
+    "Images with texts, for example, the result image maybe will be distorted. "
     "Dark images, for example, the size of result image maybe will be bigger. "
     "You have to evaluate the majority of your use cases "
     "to take a decision about the usage of this conf.",
@@ -146,7 +223,7 @@ Config.define(
 Config.define(
     "SVG_DPI",
     150,
-    "Specify the ratio between 1in and 1px for SVG images. This is only used when"
+    "Specify the ratio between 1in and 1px for SVG images. This is only used when "
     "rasterizing SVG images having their size units in cm or inches.",
     "Imaging",
 )
@@ -193,6 +270,20 @@ Config.define(
 )
 
 Config.define(
+    "PRESERVE_EXIF_COPYRIGHT_INFO",
+    False,
+    "Preserves Exif copyright information in generated images.",
+    "Imaging",
+)
+
+Config.define(
+    "PRESERVE_IPTC_INFO",
+    False,
+    "Preserves Jpeg IPTC information in generated images.",
+    "Imaging",
+)
+
+Config.define(
     "ALLOW_ANIMATED_GIFS",
     True,
     "Indicates whether thumbor should enable the EXPERIMENTAL support for animated gifs.",
@@ -220,7 +311,7 @@ Config.define(
     "ENGINE_THREADPOOL_SIZE",
     0,
     "Size of the thread pool used for image transformations."
-    " The default value is 0 (don't use a threadpoool. "
+    " The default value is 0 (don't use a threadpoool). "
     "Increase this if you are seeing your IOLoop getting "
     "blocked (often indicated by your upstream HTTP "
     "requests timing out)",
@@ -290,12 +381,20 @@ Config.define(
     "Indicates if the /unsafe URL should be available",
     "Security",
 )
-Config.define("ENABLE_ETAGS", True, "Enables automatically generated etags", "HTTP")
 Config.define(
-    "MAX_ID_LENGTH", 32, "Set maximum id length for images when stored", "Storage",
+    "ENABLE_ETAGS", True, "Enables automatically generated etags", "HTTP"
 )
 Config.define(
-    "GC_INTERVAL", None, "Set garbage collection interval in seconds", "Performance",
+    "MAX_ID_LENGTH",
+    32,
+    "Set maximum id length for images when stored",
+    "Storage",
+)
+Config.define(
+    "GC_INTERVAL",
+    None,
+    "Set garbage collection interval in seconds",
+    "Performance",
 )
 
 Config.define(
@@ -303,8 +402,12 @@ Config.define(
 )
 
 # METRICS OPTIONS
-Config.define("STATSD_HOST", None, "Host to send statsd instrumentation to", "Metrics")
-Config.define("STATSD_PORT", 8125, "Port to send statsd instrumentation to", "Metrics")
+Config.define(
+    "STATSD_HOST", None, "Host to send statsd instrumentation to", "Metrics"
+)
+Config.define(
+    "STATSD_PORT", 8125, "Port to send statsd instrumentation to", "Metrics"
+)
 Config.define("STATSD_PREFIX", None, "Prefix for statsd", "Metrics")
 
 # FILE LOADER OPTIONS
@@ -366,7 +469,7 @@ Config.define(
 )
 Config.define(
     "HTTP_LOADER_DEFAULT_USER_AGENT",
-    "Thumbor/%s" % __version__,
+    f"Thumbor/{__version__}",
     "Default user agent for thumbor http loader requests",
     "HTTP Loader",
 )
@@ -377,7 +480,10 @@ Config.define(
     "HTTP Loader",
 )
 Config.define(
-    "HTTP_LOADER_PROXY_PORT", None, "The proxy port for the proxy host", "HTTP Loader",
+    "HTTP_LOADER_PROXY_PORT",
+    None,
+    "The proxy port for the proxy host",
+    "HTTP Loader",
 )
 Config.define(
     "HTTP_LOADER_PROXY_USERNAME",
@@ -404,7 +510,10 @@ Config.define(
     "HTTP Loader",
 )
 Config.define(
-    "HTTP_LOADER_CLIENT_KEY", None, "The filename for client SSL key", "HTTP Loader",
+    "HTTP_LOADER_CLIENT_KEY",
+    None,
+    "The filename for client SSL key",
+    "HTTP Loader",
 )
 Config.define(
     "HTTP_LOADER_CLIENT_CERT",
@@ -458,7 +567,10 @@ Config.define(
 
 # PHOTO UPLOAD OPTIONS
 Config.define(
-    "UPLOAD_MAX_SIZE", 0, "Max size in Kb for images uploaded to thumbor", "Upload",
+    "UPLOAD_MAX_SIZE",
+    0,
+    "Max size in bytes for images uploaded to thumbor",
+    "Upload",
 )
 Config.define(
     "UPLOAD_ENABLED",
@@ -485,7 +597,10 @@ Config.define(
     "Upload",
 )
 Config.define(
-    "UPLOAD_DEFAULT_FILENAME", "image", "Default filename for image uploaded", "Upload",
+    "UPLOAD_DEFAULT_FILENAME",
+    "image",
+    "Default filename for image uploaded",
+    "Upload",
 )
 
 # ALIASES FOR OLD PHOTO UPLOAD OPTIONS
@@ -561,7 +676,7 @@ Config.define(
     "OPTIMIZERS",
     [
         # 'thumbor.optimizers.jpegtran',
-        # 'thumbor.optimizers.gifv',
+        # 'thumbor_plugins.optimizers.gifv',
     ],
     "List of optimizers that thumbor will use to optimize images",
     "Optimizers",
@@ -569,7 +684,10 @@ Config.define(
 
 # OPTIMIZER CONFIGURATIONS
 Config.define(
-    "JPEGTRAN_PATH", "/usr/bin/jpegtran", "Path for the jpegtran binary", "Optimizers",
+    "JPEGTRAN_PATH",
+    "/usr/bin/jpegtran",
+    "Path for the jpegtran binary",
+    "Optimizers",
 )
 
 Config.define(
@@ -641,11 +759,59 @@ Config.define(
     "Server password for the queued redis detector",
     "Queued Redis Detector",
 )
+Config.define(
+    "REDIS_QUEUE_MODE",
+    "single_node",
+    "Redis operation mode 'single_node' or 'sentinel'",
+    "Queued Redis Detector",
+)
+
+# QUEUED DETECTOR REDIS SENTINEL OPTIONS
+Config.define(
+    "REDIS_QUEUE_SENTINEL_INSTANCES",
+    "localhost:26379",
+    "Sentinel server instances for the queued redis detector",
+    "Queued Redis Detector",
+)
+Config.define(
+    "REDIS_QUEUE_SENTINEL_PASSWORD",
+    None,
+    "Sentinel server password for the queued redis detector",
+    "Queued Redis Detector",
+)
+Config.define(
+    "REDIS_QUEUE_SENTINEL_MASTER_INSTANCE",
+    "master",
+    "Sentinel server master instance for the queued redis detector",
+    "Queued Redis Detector",
+)
+Config.define(
+    "REDIS_QUEUE_SENTINEL_MASTER_PASSWORD",
+    None,
+    "Sentinel server master password for the queued redis detector",
+    "Queued Redis Detector",
+)
+Config.define(
+    "REDIS_QUEUE_SENTINEL_MASTER_DB",
+    0,
+    "Sentinel server master database index for the queued redis detector",
+    "Queued Redis Detector",
+)
+Config.define(
+    "REDIS_QUEUE_SENTINEL_SOCKET_TIMEOUT",
+    10.0,
+    "Sentinel server socket timeout for the queued redis detector",
+    "Queued Redis Detector",
+)
 
 # QUEUED DETECTOR SQS OPTIONS
 Config.define("SQS_QUEUE_KEY_ID", None, "AWS key id", "Queued SQS Detector")
-Config.define("SQS_QUEUE_KEY_SECRET", None, "AWS key secret", "Queued SQS Detector")
-Config.define("SQS_QUEUE_REGION", "us-east-1", "AWS SQS region", "Queued SQS Detector")
+Config.define(
+    "SQS_QUEUE_KEY_SECRET", None, "AWS key secret", "Queued SQS Detector"
+)
+Config.define(
+    "SQS_QUEUE_REGION", "us-east-1", "AWS SQS region", "Queued SQS Detector"
+)
 
 # ERROR HANDLING
 Config.define(
@@ -673,7 +839,10 @@ Config.define(
 
 # SENTRY REPORTING MODULE
 Config.define(
-    "SENTRY_ENVIRONMENT", None, "Sentry environment i.e.: staging ", "Errors - Sentry",
+    "SENTRY_ENVIRONMENT",
+    None,
+    "Sentry environment i.e.: staging ",
+    "Errors - Sentry",
 )
 
 # FILE REPORTING MODULE
@@ -705,8 +874,15 @@ Config.define(
 Config.define(
     "MAX_WAIT_SECONDS_BEFORE_IO_SHUTDOWN",
     0,
-    "The amount of time to waut before shutting down all io, after the server has been stopped",
+    "The amount of time to wait before shutting down all io, after the server has been stopped",
     "Server",
+)
+Config.define(
+    "NON_BLOCKING_SOCKETS",
+    False,
+    "If True, thumbor will ensure that the socket from the file descriptor number passed using"
+    " the --fd flag is non-blocking. This setting has no effect if the --fd flag is a path,"
+    " sockets created that way are always non-blocking.",
 )
 
 # HANDLER LISTS
@@ -725,6 +901,40 @@ Config.define(
     "This config value is overridden by the -a command-line parameter.",
 )
 
+Config.define(
+    "ACCESS_CONTROL_ALLOW_ORIGIN_HEADER",
+    False,
+    "Sends Access-Control-Allow-Origin header",
+)
+
+
+# COMPATIBILITY
+
+Config.define(
+    "COMPATIBILITY_LEGACY_LOADER",
+    None,
+    "Loader that will be used with the compatibility layer, instead of the "
+    "compatibility loader. Please only use this if you can't use up-to-date loaders.",
+    "Compatibility",
+)
+
+Config.define(
+    "COMPATIBILITY_LEGACY_STORAGE",
+    None,
+    "Storage that will be used with the compatibility layer, instead of the "
+    "compatibility storage. Please only use this if you can't use up-to-date storages.",
+    "Compatibility",
+)
+
+Config.define(
+    "COMPATIBILITY_LEGACY_RESULT_STORAGE",
+    None,
+    "Result Storage that will be used with the compatibility layer, instead of the "
+    "compatibility result storage. Please only use this if you can't use "
+    "up-to-date result storages.",
+    "Compatibility",
+)
+
 
 def generate_config():
     config.generate_config()
@@ -732,13 +942,9 @@ def generate_config():
 
 def format_value(value):
     if isinstance(value, str):
-        return "'%s'" % value
+        return f"'{value}'"
     if isinstance(value, (tuple, list, set)):
-        representation = "[\n"
-        for item in value:
-            representation += "#    %s" % item
-        representation += "#]"
-        return representation
+        return "[\n" + "".join(f"#    {item}" for item in value) + "#]"
     return value
 
 

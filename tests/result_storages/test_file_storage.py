@@ -11,8 +11,8 @@
 import tempfile
 from datetime import datetime
 from os.path import abspath, dirname, join
+from unittest import mock
 
-import mock
 from preggy import expect
 from tornado.testing import gen_test
 
@@ -28,16 +28,18 @@ class BaseFileStorageTestCase(TestCase):
         self.storage_path = None
         self.context = None
         self.file_storage = None
-        super(BaseFileStorageTestCase, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def get_config(self):
-        config = super(BaseFileStorageTestCase, self).get_config()
-        self.storage_path = tempfile.TemporaryDirectory()
+        config = super().get_config()
+        self.storage_path = (
+            tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        )
         config.RESULT_STORAGE_FILE_STORAGE_ROOT_PATH = self.storage_path.name
         return config
 
     def tearDown(self):
-        super(BaseFileStorageTestCase, self).tearDown()
+        super().tearDown()
         if self.storage_path is not None:
             self.storage_path.cleanup()
 
@@ -50,7 +52,7 @@ class BaseFileStorageTestCase(TestCase):
         return abspath(join(dirname(__file__), "../fixtures/result_storages"))
 
     def get_context(self):
-        ctx = super(BaseFileStorageTestCase, self).get_context()
+        ctx = super().get_context()
         cfg = self.get_config()
         ctx.config = cfg
         ctx.request = self.get_request()
@@ -67,7 +69,9 @@ class FileStorageTestCase(BaseFileStorageTestCase):
     @gen_test
     async def test_normalized_path(self):
         expect(self.file_storage).not_to_be_null()
-        expect(self.file_storage.normalize_path(self.get_http_path())).to_equal(
+        expect(
+            self.file_storage.normalize_path(self.get_http_path())
+        ).to_equal(
             f"{self.storage_path.name}/default/b6/be/"
             "a3e916129541a9e7146f69a15eb4d7c77c98"
         )
@@ -75,23 +79,27 @@ class FileStorageTestCase(BaseFileStorageTestCase):
 
 class WebPFileStorageTestCase(BaseFileStorageTestCase):
     def get_config(self):
-        self.storage_path = tempfile.TemporaryDirectory()
+        self.storage_path = (
+            tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        )
         return Config(
             AUTO_WEBP=True,
             RESULT_STORAGE_FILE_STORAGE_ROOT_PATH=self.storage_path.name,
         )
 
     def tearDown(self):
-        super(WebPFileStorageTestCase, self).tearDown()
+        super().tearDown()
         self.storage_path.cleanup()
 
-    def get_request(self):
+    def get_request(self):  # pylint: disable=arguments-differ
         return RequestParameters(accepts_webp=True)
 
     @gen_test
     async def test_normalized_path_with_auto_webp_path(self):
         expect(self.file_storage).not_to_be_null()
-        expect(self.file_storage.normalize_path(self.get_http_path())).to_equal(
+        expect(
+            self.file_storage.normalize_path(self.get_http_path())
+        ).to_equal(
             f"{self.storage_path.name}/auto_webp/b6/be/"
             "a3e916129541a9e7146f69a15eb4d7c77c98"
         )
@@ -99,9 +107,11 @@ class WebPFileStorageTestCase(BaseFileStorageTestCase):
 
 class ResultStorageResultTestCase(BaseFileStorageTestCase):
     def get_config(self):
-        return Config(RESULT_STORAGE_FILE_STORAGE_ROOT_PATH=self.get_fixture_path())
+        return Config(
+            RESULT_STORAGE_FILE_STORAGE_ROOT_PATH=self.get_fixture_path()
+        )
 
-    def get_request(self):
+    def get_request(self):  # pylint: disable=arguments-differ
         return RequestParameters(url="image.jpg")
 
     @gen_test
@@ -122,15 +132,18 @@ class ExpiredFileStorageTestCase(BaseFileStorageTestCase):
             RESULT_STORAGE_EXPIRATION_SECONDS=10,
         )
 
-    def get_request(self):
+    def get_request(self):  # pylint: disable=arguments-differ
         return RequestParameters(url="image.jpg")
 
     @gen_test
     async def test_cannot_get_expired_1_day_old_image(self):
-        current_timestamp = (datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
+        current_timestamp = (
+            datetime.utcnow() - datetime(1970, 1, 1)
+        ).total_seconds()
         new_mtime = current_timestamp - 60 * 60 * 24
         with mock.patch(
-            "thumbor.result_storages.file_storage.getmtime", return_value=new_mtime,
+            "thumbor.result_storages.file_storage.getmtime",
+            return_value=new_mtime,
         ):
             result = await self.file_storage.get()
         expect(result).to_be_null()

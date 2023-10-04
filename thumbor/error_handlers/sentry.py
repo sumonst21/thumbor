@@ -27,6 +27,7 @@ SENTRY_DSN_URL configuration."
         }
 
         env = config.get("SENTRY_ENVIRONMENT")
+
         if env is not None:
             kwargs["environment"] = env
 
@@ -34,9 +35,13 @@ SENTRY_DSN_URL configuration."
         ignore_logger("thumbor")
         ignore_logger("tornado.access")
 
-        sentry_sdk.init(**kwargs)
+        sentry_sdk.init(  # pylint: disable=abstract-class-instantiated
+            **kwargs
+        )
 
-    def handle_error(self, _, handler, exception):
+    def handle_error(
+        self, context, handler, exception
+    ):  # pylint: disable=unused-argument
         req = handler.request
 
         exc_info = exc_info_from_error(exception)

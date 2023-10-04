@@ -31,9 +31,13 @@ from thumbor.transformer import Transformer
 class TransformerTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.root_folder = tempfile.TemporaryDirectory()
+        cls.root_folder = (
+            tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        )
         cls.root_path = cls.root_folder.name
-        cls.loader_path = abspath(join(dirname(__file__), "../fixtures/images/"))
+        cls.loader_path = abspath(
+            join(dirname(__file__), "../fixtures/images/")
+        )
         cls.base_uri = "/image"
 
     @classmethod
@@ -42,7 +46,7 @@ class TransformerTestCase(TestCase):
             cls.root_folder.cleanup()
 
     def setUp(self):
-        super(TransformerTestCase, self).setUp()
+        super().setUp()
         self.has_handled = False
 
     def get_context(self):
@@ -54,7 +58,9 @@ class TransformerTestCase(TestCase):
 
         importer = Importer(cfg)
         importer.import_modules()
-        server = ServerParameters(8889, "localhost", "thumbor.conf", None, "info", None)
+        server = ServerParameters(
+            8889, "localhost", "thumbor.conf", None, "info", None
+        )
         server.security_key = "ACME-SEC"
         return Context(server, cfg, importer)
 
@@ -126,7 +132,9 @@ class TransformerTestCase(TestCase):
         self.validate_resize(test_data)
 
     @gen_test
-    async def test_can_resize_images_with_detection_error_not_ignoring_it(self,):
+    async def test_can_resize_images_with_detection_error_not_ignoring_it(
+        self,
+    ):
         test_data = TestData(
             source_width=800,
             source_height=600,
@@ -145,14 +153,14 @@ class TransformerTestCase(TestCase):
         )
         trans = Transformer(context)
 
-        with expect.error_to_happen(Exception, message="x"):
+        with expect.error_to_happen(IOError, message="some-io-error"):
             await trans.transform()
 
         expect(test_data.engine.calls["resize"]).to_length(0)
 
     @gen_test
     async def test_can_fit_in(self):
-        for (test_data, (width, height, should_resize)) in FIT_IN_CROP_DATA:
+        for test_data, (width, height, should_resize) in FIT_IN_CROP_DATA:
             context = test_data.to_context()
             engine = context.modules.engine
             trans = Transformer(context)
@@ -238,7 +246,9 @@ class TransformerTestCase(TestCase):
 
         await trans.transform()
 
-        expect(engine.calls["resize"]).to_equal([{"width": 800, "height": 200}])
+        expect(engine.calls["resize"]).to_equal(
+            [{"width": 800, "height": 200}]
+        )
         expect(engine.calls["crop"]).to_be_empty()
 
     @gen_test

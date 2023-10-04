@@ -12,8 +12,8 @@ import shutil
 from datetime import datetime
 from os.path import dirname, exists, join
 from tempfile import mkdtemp
+from unittest import mock
 
-import mock
 from preggy import expect
 from tornado.testing import gen_test
 
@@ -29,19 +29,21 @@ class BaseFileStorageTestCase(TestCase):
         return Config(FILE_STORAGE_ROOT_PATH=tmp)
 
     def get_server(self):
-        server = ServerParameters(8888, "localhost", "thumbor.conf", None, "info", None)
+        server = ServerParameters(
+            8888, "localhost", "thumbor.conf", None, "info", None
+        )
         server.security_key = "ACME-SEC"
         return server
 
     def get_image_path(self, name):
-        return "./tests/fixtures/images/{0}".format(name)
+        return f"./tests/fixtures/images/{name}"
 
     def get_image_bytes(self, name):
         with open(self.get_image_path(name), "rb") as img:
             return img.read()
 
     def get_image_url(self, name):
-        return "s.glbimg.com/some/{0}".format(name)
+        return f"s.glbimg.com/some/{name}"
 
 
 class FileStorageTestCase(BaseFileStorageTestCase):
@@ -87,7 +89,9 @@ class FileStorageTestCase(BaseFileStorageTestCase):
     async def test_can_store_images_in_same_folder(self):
         iurl = self.get_image_url("image_999.jpg")
         other_iurl = iurl.replace("/some/", "/some_other/")
-        root_path = join(self.config.FILE_STORAGE_ROOT_PATH, dirname(other_iurl))
+        root_path = join(
+            self.config.FILE_STORAGE_ROOT_PATH, dirname(other_iurl)
+        )
         if exists(root_path):
             shutil.rmtree(root_path)
 
@@ -154,7 +158,9 @@ class ExpiredFileStorageTestCase(BaseFileStorageTestCase):
         ibytes = self.get_image_bytes("image.jpg")
         storage = FileStorage(self.context)
         await storage.put(iurl, ibytes)
-        current_timestamp = (datetime.utcnow() - datetime(1970, 1, 1)).total_seconds()
+        current_timestamp = (
+            datetime.utcnow() - datetime(1970, 1, 1)
+        ).total_seconds()
         new_mtime = current_timestamp - 60 * 60 * 24
         with mock.patch(
             "thumbor.storages.file_storage.getmtime", return_value=new_mtime
@@ -190,7 +196,7 @@ class CryptoBadConfFileStorageTestCase(BaseFileStorageTestCase):
         )
 
     def get_server(self):
-        server = super(CryptoBadConfFileStorageTestCase, self).get_server()
+        server = super().get_server()
         server.security_key = ""
         return server
 
@@ -203,7 +209,8 @@ class CryptoBadConfFileStorageTestCase(BaseFileStorageTestCase):
 
         msg = "STORES_CRYPTO_KEY_FOR_EACH_IMAGE can't be True if no SECURITY_KEY specified"
         with expect.error_to_happen(
-            RuntimeError, message=msg,
+            RuntimeError,
+            message=msg,
         ):
             await storage.put_crypto(iurl)
 

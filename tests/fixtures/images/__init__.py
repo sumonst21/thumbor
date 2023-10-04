@@ -22,29 +22,31 @@ def get_abs_path(img):
     return abspath(join(dirname(__file__), img))
 
 
-VALID_IMAGE_PATH = get_abs_path(u"alabama1_ap620é.jpg")
-SVG_IMAGE_PATH = get_abs_path(u"Commons-logo.svg")
-TOO_SMALL_IMAGE_PATH = get_abs_path(u"20x20.jpg")
-TOO_HEAVY_IMAGE_PATH = get_abs_path(u"Giunchedi%2C_Filippo_January_2015_01.jpg")
-DEFAULT_IMAGE_PATH = get_abs_path(u"image.jpg")
-ALABAMA1_IMAGE_PATH = get_abs_path(u"alabama1_ap620%C3%A9.jpg")
-SPACE_IMAGE_PATH = get_abs_path(u"image%20space.jpg")
-INVALID_QUANTIZATION_IMAGE_PATH = get_abs_path(u"invalid_quantization.jpg")
-ANIMATED_IMAGE_PATH = get_abs_path(u"animated.gif")
-NOT_SO_ANIMATED_IMAGE_PATH = get_abs_path(u"animated-one-frame.gif")
+VALID_IMAGE_PATH = get_abs_path("alabama1_ap620é.jpg")
+SVG_IMAGE_PATH = get_abs_path("Commons-logo.svg")
+TOO_SMALL_IMAGE_PATH = get_abs_path("20x20.jpg")
+TOO_HEAVY_IMAGE_PATH = get_abs_path("Giunchedi%2C_Filippo_January_2015_01.jpg")
+DEFAULT_IMAGE_PATH = get_abs_path("image.jpg")
+ALABAMA1_IMAGE_PATH = get_abs_path("alabama1_ap620%C3%A9.jpg")
+SPACE_IMAGE_PATH = get_abs_path("image%20space.jpg")
+INVALID_QUANTIZATION_IMAGE_PATH = get_abs_path("invalid_quantization.jpg")
+ANIMATED_IMAGE_PATH = get_abs_path("animated.gif")
+NOT_SO_ANIMATED_IMAGE_PATH = get_abs_path("animated-one-frame.gif")
 
 
 def get_image(img):
     encode_formats = ["NFD", "NFC", "NFKD", "NFKC"]
     for encode_format in encode_formats:
         try:
-            with open(unicodedata.normalize(encode_format, img), "rb") as stream:
+            with open(
+                unicodedata.normalize(encode_format, img), "rb"
+            ) as stream:
                 body = stream.read()
                 break
         except IOError:
             pass
     else:
-        raise IOError("%s not found" % img)
+        raise IOError(f"{img} not found")
     return body
 
 

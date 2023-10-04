@@ -21,7 +21,10 @@ class Filter(BaseFilter):
         self.nine_patch_engine.enable_alpha()
         self.engine.enable_alpha()
 
-        (nine_patch_mode, nine_patch_data,) = self.nine_patch_engine.image_data_as_rgb()
+        (
+            nine_patch_mode,
+            nine_patch_data,
+        ) = self.nine_patch_engine.image_data_as_rgb()
         padding = _nine_patch.get_padding(
             nine_patch_mode,
             nine_patch_data,
@@ -35,7 +38,7 @@ class Filter(BaseFilter):
 
         if mode != nine_patch_mode:
             raise RuntimeError(
-                "Image mode mismatch: %s != %s" % (mode, nine_patch_mode)
+                f"Image mode mismatch: {mode} != {nine_patch_mode}"
             )
 
         imgdata = _nine_patch.apply(
@@ -72,7 +75,9 @@ class Filter(BaseFilter):
         if bottom > 0:
             new_height += bottom
         new_engine = self.context.modules.engine.__class__(self.context)
-        new_engine.image = new_engine.gen_image((new_width, new_height), "#fff")
+        new_engine.image = new_engine.gen_image(
+            (new_width, new_height), "#fff"
+        )
         new_engine.enable_alpha()
         new_engine.paste(self.engine, (offset_x, offset_y))
         self.engine.image = new_engine.image
@@ -92,7 +97,9 @@ class Filter(BaseFilter):
     @filter_method(BaseFilter.String)
     async def frame(self, url):
         self.url = url
-        self.nine_patch_engine = self.context.modules.engine.__class__(self.context)
+        self.nine_patch_engine = self.context.modules.engine.__class__(
+            self.context
+        )
         self.storage = self.context.modules.storage
 
         buffer = await self.storage.get(self.url)

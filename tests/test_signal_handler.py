@@ -9,9 +9,7 @@
 # Copyright (c) 2011 globo.com thumbor@googlegroups.com
 
 import signal
-from unittest import TestCase
-
-import mock
+from unittest import TestCase, mock
 
 from thumbor.signal_handler import setup_signal_handler, signal_handler
 
@@ -37,4 +35,6 @@ class SignalhandlerTestCase(TestCase):
 
         signal_handler(mock.Mock(), mock.Mock(), signal.SIGTERM, mock.Mock())
 
-        ioloop_instance_mock.add_callback_from_signal.assert_called_with(mock.ANY)
+        ioloop_instance_mock.add_callback_from_signal.assert_called_with(
+            mock.ANY
+        )

@@ -11,19 +11,23 @@
 import optparse
 import sys
 from io import StringIO
-from unittest import TestCase
+from unittest import TestCase, mock
 
-import mock
 from preggy import expect
 
 import thumbor.url_composer as composer
-from thumbor.url_composer import get_options, get_parser, get_thumbor_params, main
+from thumbor.url_composer import (
+    get_options,
+    get_parser,
+    get_thumbor_params,
+    main,
+)
 
 
 class UrlComposerTestCase(TestCase):
     @mock.patch("sys.stdout", new_callable=StringIO)
     def test_can_compose_url(self, mock_stdout):
-        url = main(
+        main(
             [
                 "-k",
                 "MY-SECURITY-KEY",
@@ -35,9 +39,6 @@ class UrlComposerTestCase(TestCase):
             ]
         )
 
-        expect(url).to_equal(
-            "/G_dykuWBGyEil5JnNh9cBke0Ajo=/200x300/myserver.com/myimg.jpg"
-        )
         expect(mock_stdout.getvalue()).to_equal(
             "URL:\n/G_dykuWBGyEil5JnNh9cBke0Ajo=/200x300/myserver.com/myimg.jpg\n"
         )
@@ -47,20 +48,27 @@ class UrlComposerTestCase(TestCase):
     def test_fails_when_no_config_or_key(self, load_mock, mock_stdout):
         load_mock.side_effect = RuntimeError("fail to load")
 
-        result = main(["-w", "200", "-e", "300", "myserver.com/myimg.jpg"])
+        with self.assertRaises(SystemExit) as system_error:
+            main(["-w", "200", "-e", "300", "myserver.com/myimg.jpg"])
 
-        expect(result).to_be_null()
         expect(mock_stdout.getvalue()).to_equal(
             "Error: The -k or --key argument is mandatory. "
             "For more information type thumbor-url -h\n"
         )
 
+        expect(system_error.exception.code).to_equal(1)
+
     def test_get_thumbor_params(self):
-        params = mock.Mock(key_file="./tests/fixtures/thumbor.key", crop=None,)
+        params = mock.Mock(
+            key_file="./tests/fixtures/thumbor.key",
+            crop=None,
+        )
         config = mock.Mock()
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).to_equal("SECURITY_KEY_FILE")
@@ -68,12 +76,15 @@ class UrlComposerTestCase(TestCase):
 
     def test_get_thumbor_params_with_crop(self):
         params = mock.Mock(
-            key_file="./tests/fixtures/thumbor.key", crop="300x200:400x500",
+            key_file="./tests/fixtures/thumbor.key",
+            crop="300x200:400x500",
         )
         config = mock.Mock()
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).to_equal("SECURITY_KEY_FILE")
@@ -85,12 +96,18 @@ class UrlComposerTestCase(TestCase):
 
     def test_get_thumbor_params_full_adaptive_fitin_false(self):
         params = mock.Mock(
-            key_file=None, crop=None, fitin=False, full=False, adaptive=False,
+            key_file=None,
+            crop=None,
+            fitin=False,
+            full=False,
+            adaptive=False,
         )
         config = mock.Mock(SECURITY_KEY="woot")
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).not_to_be_null()
@@ -101,12 +118,18 @@ class UrlComposerTestCase(TestCase):
 
     def test_get_thumbor_params_full_adaptive_fitin(self):
         params = mock.Mock(
-            key_file=None, crop=None, fitin=True, full=True, adaptive=True,
+            key_file=None,
+            crop=None,
+            fitin=True,
+            full=True,
+            adaptive=True,
         )
         config = mock.Mock(SECURITY_KEY="woot")
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).not_to_be_null()
@@ -114,12 +137,18 @@ class UrlComposerTestCase(TestCase):
 
     def test_get_thumbor_params_adaptive_fitin(self):
         params = mock.Mock(
-            key_file=None, crop=None, fitin=True, full=False, adaptive=True,
+            key_file=None,
+            crop=None,
+            fitin=True,
+            full=False,
+            adaptive=True,
         )
         config = mock.Mock(SECURITY_KEY="woot")
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).not_to_be_null()
@@ -127,12 +156,18 @@ class UrlComposerTestCase(TestCase):
 
     def test_get_thumbor_params_full_fitin(self):
         params = mock.Mock(
-            key_file=None, crop=None, fitin=True, full=True, adaptive=False,
+            key_file=None,
+            crop=None,
+            fitin=True,
+            full=True,
+            adaptive=False,
         )
         config = mock.Mock(SECURITY_KEY="woot")
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).not_to_be_null()
@@ -140,12 +175,18 @@ class UrlComposerTestCase(TestCase):
 
     def test_get_thumbor_params_fitin(self):
         params = mock.Mock(
-            key_file=None, crop=None, fitin=True, full=False, adaptive=False,
+            key_file=None,
+            crop=None,
+            fitin=True,
+            full=False,
+            adaptive=False,
         )
         config = mock.Mock(SECURITY_KEY="woot")
 
         security_key, thumbor_params = get_thumbor_params(
-            "/image/url.jpg", params, config,
+            "/image/url.jpg",
+            params,
+            config,
         )
 
         expect(security_key).not_to_be_null()
@@ -192,12 +233,12 @@ class UrlComposerTestCase(TestCase):
         expect(args).to_length(1)
         expect(args[0]).to_equal("myserver.com/myimg.jpg")
 
-    @mock.patch("sys.stdout", new_callable=StringIO)
-    def test_get_options_fails_when_no_url(self, mock_stdout):
-        get_options(["-k", "MY-SECURITY-KEY", "-w", "200", "-e", "300"])
-        expect(mock_stdout.getvalue()).to_equal(
-            "Error: The image argument is mandatory. For more information type thumbor-url -h\n"
+    def test_get_options_fails_when_no_url(self):
+        parsed_options, arguments = get_options(
+            ["-k", "MY-SECURITY-KEY", "-w", "200", "-e", "300"]
         )
+        expect(parsed_options).to_be_null()
+        expect(arguments).to_be_null()
 
     def test_get_parser(self):
         parser = get_parser()
